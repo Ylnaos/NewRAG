@@ -46,6 +46,10 @@ class IndexService:
                         "path": chunk.path,
                         "text": chunk.text,
                         "order": chunk.order,
+                        "title": doc.title,
+                        "source": doc.source,
+                        "created_at": doc.created_at.isoformat(),
+                        "updated_at": doc.updated_at.isoformat(),
                     }
                 )
                 texts.append(chunk.text)

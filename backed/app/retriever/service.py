@@ -1,5 +1,7 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
+from dataclasses import replace
+from datetime import datetime, timezone
 from typing import Dict, List, Tuple
 
 from app.core.weights import RetrievalWeights
@@ -7,6 +9,12 @@ from app.index.bm25 import BM25Indexer
 from app.index.service import IndexService
 from app.index.tokenizer import tokenize
 from app.index.vector import VectorIndexer
+
+_EN_STOPWORDS = {
+    'a', 'an', 'and', 'according', 'answer', 'exact', 'for', 'from', 'give', 'how', 'i', 'if', 'in', 'is', 'it',
+    'me', 'of', 'on', 'only', 'please', 'reply', 'show', 'tell', 'that', 'the', 'this', 'to', 'using', 'what',
+    'when', 'where', 'which', 'with', 'within', 'you', 'your',
+}
 
 
 class RetrieverService:
@@ -63,18 +71,25 @@ class RetrieverService:
         bm25_norm = _normalize(bm25_map)
         vector_norm = _normalize(vector_map)
         weights = self._weights.normalized()
-
-        query_tokens = set(tokenize(query))
+        query_tokens = _informative_tokens(set(tokenize(query)))
+        recency_scores = _build_recency_scores(corpus)
         combined: Dict[int, float] = {}
         for idx in range(len(corpus)):
             sparse = bm25_norm.get(idx, 0.0)
             dense = vector_norm.get(idx, 0.0)
-            path = str(corpus[idx].get("path", ""))
+            item = corpus[idx]
+            path = str(item.get("path", ""))
+            text = str(item.get("text", ""))
+            text_tokens = set(tokenize(text))
             structure = _structure_prior(query_tokens, path) if structure_prior_enabled else 0.0
+            anchor = _anchor_coverage(query_tokens, text_tokens)
+            recency = recency_scores.get(idx, 0.5)
             combined[idx] = (
                 weights.sparse_weight * sparse
                 + weights.dense_weight * dense
                 + weights.structure_weight * structure
+                + 0.2 * anchor
+                + 0.1 * recency
             )
         return combined
 
@@ -108,14 +123,18 @@ class RetrieverService:
         rerank_k: int,
     ) -> List[Dict[str, object]]:
         candidates = sorted(combined.items(), key=lambda item: item[1], reverse=True)[:rerank_k]
-        query_tokens = set(tokenize(query))
+        query_tokens = _informative_tokens(set(tokenize(query)))
+        recency_scores = _build_recency_scores(corpus)
         reranked: List[Dict[str, object]] = []
         weights = self._weights.normalized()
         for idx, coarse_score in candidates:
             item = corpus[idx]
             text = str(item.get("text", ""))
-            overlap = _overlap_score(query_tokens, text)
-            fine_score = weights.overlap_weight * overlap + weights.coarse_weight * coarse_score
+            text_tokens = set(tokenize(text))
+            overlap = _overlap_score(query_tokens, text_tokens)
+            anchor = _anchor_coverage(query_tokens, text_tokens)
+            recency = recency_scores.get(idx, 0.5)
+            fine_score = weights.overlap_weight * overlap + weights.coarse_weight * coarse_score + 0.25 * anchor + 0.1 * recency
             reranked.append(
                 {
                     "chunk_id": item.get("chunk_id"),
@@ -145,19 +164,58 @@ def _normalize(scores: Dict[int, float]) -> Dict[int, float]:
     return {idx: (score - min_val) / (max_val - min_val) for idx, score in scores.items()}
 
 
+def _informative_tokens(tokens: set[str]) -> set[str]:
+    filtered = {token for token in tokens if token not in _EN_STOPWORDS}
+    return filtered or tokens
+
+
 def _structure_prior(query_tokens: set[str], path: str) -> float:
     if not query_tokens or not path:
         return 0.0
-    path_tokens = set(tokenize(path))
+    path_tokens = _informative_tokens(set(tokenize(path)))
     if not path_tokens:
         return 0.0
     return len(query_tokens.intersection(path_tokens)) / max(len(query_tokens), 1)
 
 
-def _overlap_score(query_tokens: set[str], text: str) -> float:
-    if not query_tokens:
-        return 0.0
-    text_tokens = set(tokenize(text))
-    if not text_tokens:
+def _overlap_score(query_tokens: set[str], text_tokens: set[str]) -> float:
+    if not query_tokens or not text_tokens:
         return 0.0
     return len(query_tokens.intersection(text_tokens)) / max(len(query_tokens), 1)
+
+
+def _anchor_coverage(query_tokens: set[str], text_tokens: set[str]) -> float:
+    if not query_tokens or not text_tokens:
+        return 0.0
+    anchors = {token for token in query_tokens if len(token) >= 4 or any(ch.isdigit() for ch in token)}
+    anchors = anchors or query_tokens
+    return len(anchors.intersection(text_tokens)) / max(len(anchors), 1)
+
+
+def _build_recency_scores(corpus: List[Dict[str, object]]) -> Dict[int, float]:
+    timestamps: Dict[int, datetime] = {}
+    for idx, item in enumerate(corpus):
+        value = item.get("updated_at") or item.get("created_at")
+        parsed = _parse_dt(value)
+        if parsed is not None:
+            timestamps[idx] = parsed
+    if not timestamps:
+        return {idx: 0.5 for idx in range(len(corpus))}
+    if len(timestamps) == 1:
+        only_idx = next(iter(timestamps.keys()))
+        return {idx: 1.0 if idx == only_idx else 0.5 for idx in range(len(corpus))}
+    min_ts = min(timestamps.values()).timestamp()
+    max_ts = max(timestamps.values()).timestamp()
+    if max_ts <= min_ts:
+        return {idx: 1.0 for idx in timestamps}
+    scores = {idx: (ts.timestamp() - min_ts) / (max_ts - min_ts) for idx, ts in timestamps.items()}
+    return {idx: scores.get(idx, 0.5) for idx in range(len(corpus))}
+
+
+def _parse_dt(value: object) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
