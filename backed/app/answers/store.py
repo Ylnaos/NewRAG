@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 from .models import AnswerRecord
 
@@ -22,3 +22,14 @@ class AnswerStore:
             return None
         payload = json.loads(path.read_text(encoding="utf-8"))
         return AnswerRecord.from_dict(payload)
+
+    def list(self) -> List[AnswerRecord]:
+        records: List[AnswerRecord] = []
+        for path in self._base_dir.glob('*.json'):
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                records.append(AnswerRecord.from_dict(payload))
+            except Exception:  # noqa: BLE001
+                continue
+        records.sort(key=lambda item: item.created_at, reverse=True)
+        return records

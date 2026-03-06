@@ -1,8 +1,9 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+
 from app.api.schemas import ArchiveDocumentRequest
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
@@ -34,11 +35,13 @@ async def upload_document(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    request.app.state.index_service.mark_stale()
     if async_process:
+        service.mark_queued(doc.doc_id)
         task_id = await request.app.state.task_queue.submit(service.process_document, doc.doc_id)
         return {
             "doc_id": doc.doc_id,
-            "status": doc.status.value,
+            "status": "QUEUED",
             "task_id": task_id,
         }
 
@@ -81,6 +84,7 @@ async def delete_document(doc_id: str, request: Request) -> dict:
     deleted = service.delete_document(doc_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="document not found")
+    request.app.state.index_service.mark_stale()
     return {"doc_id": doc_id, "deleted": True}
 
 
@@ -100,7 +104,8 @@ async def archive_document(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if updated is None:
-        raise HTTPException(status_code=404, detail="document not found")       
+        raise HTTPException(status_code=404, detail="document not found")
+    request.app.state.index_service.mark_stale()
     return {"document": updated.to_dict()}
 
 
@@ -110,4 +115,5 @@ async def restore_document(doc_id: str, request: Request) -> dict:
     updated = service.archive_document(doc_id, restore=True)
     if updated is None:
         raise HTTPException(status_code=404, detail="document not found")
+    request.app.state.index_service.mark_stale()
     return {"document": updated.to_dict()}

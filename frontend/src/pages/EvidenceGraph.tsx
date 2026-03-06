@@ -1,171 +1,160 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
-import { Maximize, Search, ZoomIn, ZoomOut } from 'lucide-react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Maximize, RefreshCw, Search, ZoomIn, ZoomOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getDocumentTree } from '../api/backend';
-import { DocumentTreeNode, GraphNode, applyDocumentTree, useDocuments } from '../contexts/DocumentsContext';
+import { BackendGraphNode, getAnswerGraph, listAnswers } from '../api/backend';
 
-const flattenTree = (nodes: DocumentTreeNode[], depth = 0): Array<DocumentTreeNode & { depth: number }> => {
-  const output: Array<DocumentTreeNode & { depth: number }> = [];
-  nodes.forEach((node) => {
-    output.push({ ...node, depth });
-    if (node.children?.length) {
-      output.push(...flattenTree(node.children, depth + 1));
-    }
+interface PositionedNode {
+  node: BackendGraphNode;
+  x: number;
+  y: number;
+}
+
+const layoutNodes = (nodes: BackendGraphNode[]): PositionedNode[] => {
+  if (nodes.length === 0) return [];
+  return nodes.map((node, index) => {
+    const angle = (index / nodes.length) * Math.PI * 2 - Math.PI / 2;
+    const radius = nodes.length === 1 ? 0 : 120 + Math.min(nodes.length, 8) * 10;
+    return {
+      node,
+      x: Math.cos(angle) * radius,
+      y: Math.sin(angle) * radius,
+    };
   });
-  return output;
 };
 
 const EvidenceGraph: React.FC = () => {
   const { t } = useTranslation();
-  const { documents, updateDocument } = useDocuments();
-  const activeDocs = documents.filter((doc) => doc.status !== 'ARCHIVED');
-  const [selectedDocId, setSelectedDocId] = useState(activeDocs[0]?.id ?? '');
+  const [answers, setAnswers] = useState<Array<{ answer_id: string; query: string; answer: string; created_at?: string }>>([]);
+  const [selectedAnswerId, setSelectedAnswerId] = useState('');
+  const [graph, setGraph] = useState<{ nodes: BackendGraphNode[]; edges: Array<{ source: string; target: string }> }>({ nodes: [], edges: [] });
   const [selectedNodeId, setSelectedNodeId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [scale, setScale] = useState(1);
-  const [treeError, setTreeError] = useState('');
+  const [requestError, setRequestError] = useState('');
+
+  const refreshAnswers = useCallback(async () => {
+    try {
+      const response = await listAnswers();
+      const nextAnswers = response.answers.map((item) => ({
+        answer_id: item.answer_id,
+        query: item.query,
+        answer: item.answer,
+        created_at: item.created_at,
+      }));
+      setAnswers(nextAnswers);
+      if (!selectedAnswerId && nextAnswers.length > 0) {
+        setSelectedAnswerId(nextAnswers[0].answer_id);
+      }
+      setRequestError('');
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : t('common.requestFailed'));
+    }
+  }, [selectedAnswerId, t]);
 
   useEffect(() => {
-    if (activeDocs.length === 0) {
-      setSelectedDocId('');
-      return;
-    }
-    if (!selectedDocId || !activeDocs.some((doc) => doc.id === selectedDocId)) {
-      setSelectedDocId(activeDocs[0].id);
-    }
-  }, [activeDocs, selectedDocId]);
-
-  const document = useMemo(() => activeDocs.find((doc) => doc.id === selectedDocId), [activeDocs, selectedDocId]);
+    void refreshAnswers();
+  }, [refreshAnswers]);
 
   useEffect(() => {
-    if (!document) return;
-    if (document.tree.length > 0) return;
+    if (!selectedAnswerId) return;
     let active = true;
-    setTreeError('');
-    void getDocumentTree(document.id)
-      .then((tree) => {
+    void getAnswerGraph(selectedAnswerId)
+      .then((response) => {
         if (!active) return;
-        updateDocument(document.id, (doc) => applyDocumentTree(doc, tree.tree));
+        setGraph({ nodes: response.graph.nodes ?? [], edges: response.graph.edges ?? [] });
+        setSelectedNodeId((prev) => prev || response.graph.nodes?.[0]?.id || '');
       })
       .catch((error) => {
         if (!active) return;
-        setTreeError(error instanceof Error ? error.message : t('graph.errors.tree'));
+        setRequestError(error instanceof Error ? error.message : t('common.requestFailed'));
       });
     return () => {
       active = false;
     };
-  }, [document, updateDocument, t]);
+  }, [selectedAnswerId, t]);
 
-  const matchingNodes = useMemo(() => {
-    if (!document || !searchTerm) return new Set<string>();
-    return new Set(document.graph.nodes
-      .filter((node) => node.label.toLowerCase().includes(searchTerm.toLowerCase()))
-      .map((node) => node.id));
-  }, [document, searchTerm]);
+  const filteredAnswers = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+    if (!keyword) return answers;
+    return answers.filter((item) => item.query.toLowerCase().includes(keyword) || item.answer.toLowerCase().includes(keyword));
+  }, [answers, searchTerm]);
 
-  if (!document) {
-    return (
-      <div className="page">
-        <section className="section-card">
-          <div className="section-title">{t('graph.title')}</div>
-          <p className="muted">{t('graph.noDocuments')}</p>
-        </section>
-      </div>
-    );
-  }
+  const positionedNodes = useMemo(() => layoutNodes(graph.nodes), [graph.nodes]);
+  const selectedNode = useMemo(() => graph.nodes.find((node) => node.id === selectedNodeId), [graph.nodes, selectedNodeId]);
 
-  const centerX = 280;
-  const centerY = 200;
-
-  const treeNodes = flattenTree(document.tree);
-  const selectedNode = document.graph.nodes.find((node) => node.id === selectedNodeId);
-  const evidenceCount = selectedNode
-    ? document.evidence.filter((item) => item.nodeId === selectedNodeId).length
-    : 0;
-
-  const renderTree = (nodes: DocumentTreeNode[], depth = 0) =>
-    nodes.map((node) => {
-      const isSelected = node.id === selectedNodeId;
-      const isMatch = matchingNodes.has(node.id);
-      return (
-        <div key={node.id} style={{ marginLeft: depth * 12 }}>
-          <div
-            onClick={() => setSelectedNodeId(node.id)}
-            style={{
-              padding: '6px 8px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              backgroundColor: isSelected ? 'var(--color-primary-light)' : isMatch ? 'var(--color-surface-hover)' : 'transparent',
-              border: isSelected ? '1px solid var(--color-border)' : '1px solid transparent',
-            }}
-          >
-            {node.title}
-          </div>
-          {node.children && renderTree(node.children, depth + 1)}
-        </div>
-      );
-    });
+  const centerX = 260;
+  const centerY = 180;
 
   return (
     <div className="page">
       <section className="section-card">
-        <div className="section-title">{t('graph.title')}</div>
-        <div className="grid-2" style={{ marginTop: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div>
-            <label className="muted">{t('graph.documentLabel')}</label>
-            <select className="input" value={selectedDocId} onChange={(event) => setSelectedDocId(event.target.value)}>
-              {activeDocs.map((doc) => (
-                <option key={doc.id} value={doc.id}>{doc.name}</option>
-              ))}
-            </select>
+            <div className="section-title">{t('graph.title')}</div>
+            <div className="muted">基于真实答案记录展示证据图谱。</div>
+            {requestError && <div className="muted" style={{ marginTop: '8px', color: 'var(--color-danger)' }}>{requestError}</div>}
           </div>
-          <div>
-            <label className="muted">{t('graph.searchNodes')}</label>
-            <div style={{ position: 'relative' }}>
-              <Search size={16} style={{ position: 'absolute', top: '10px', left: '10px', color: 'var(--color-text-muted)' }} />
-              <input
-                className="input"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder={t('graph.searchPlaceholder')}
-                style={{ paddingLeft: '32px', width: '100%' }}
-              />
-            </div>
+          <div className="toolbar">
+            <button className="btn" onClick={() => void refreshAnswers()}><RefreshCw size={16} />{t('system.refresh')}</button>
+            <button className="btn" onClick={() => setScale((prev) => Math.min(2, prev + 0.1))}><ZoomIn size={16} /></button>
+            <button className="btn" onClick={() => setScale((prev) => Math.max(0.6, prev - 0.1))}><ZoomOut size={16} /></button>
+            <button className="btn" onClick={() => setScale(1)}><Maximize size={16} /></button>
           </div>
         </div>
       </section>
 
-      <section className="section-card" style={{ display: 'grid', gridTemplateColumns: '1.1fr 2fr', gap: '20px' }}>
+      <section className="section-card" style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr 1fr', gap: '20px' }}>
         <div>
-          <div className="section-title">{t('graph.structureTree')}</div>
-          {treeError && <div className="muted" style={{ marginBottom: '8px' }}>{treeError}</div>}
-          <div style={{ display: 'grid', gap: '6px' }}>
-            {document.tree.length > 0 ? renderTree(document.tree) : (
-              <div className="muted">{t('graph.treeUnavailable')}</div>
-            )}
+          <div className="section-title">Answers</div>
+          <div style={{ position: 'relative', marginTop: '12px', marginBottom: '12px' }}>
+            <Search size={16} style={{ position: 'absolute', top: '10px', left: '10px', color: 'var(--color-text-muted)' }} />
+            <input
+              className="input"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={t('graph.searchPlaceholder')}
+              style={{ paddingLeft: '32px', width: '100%' }}
+            />
+          </div>
+          <div style={{ display: 'grid', gap: '10px' }}>
+            {filteredAnswers.map((item) => (
+              <button
+                key={item.answer_id}
+                className="btn"
+                onClick={() => {
+                  setSelectedAnswerId(item.answer_id);
+                  setSelectedNodeId('');
+                }}
+                style={{
+                  justifyContent: 'flex-start',
+                  textAlign: 'left',
+                  padding: '12px',
+                  background: selectedAnswerId === item.answer_id ? 'var(--color-primary-light)' : 'var(--color-bg)',
+                }}
+              >
+                <div style={{ display: 'grid', gap: '4px', width: '100%' }}>
+                  <strong>{item.query || 'Untitled answer'}</strong>
+                  <span className="muted" style={{ whiteSpace: 'normal' }}>{item.answer.slice(0, 120)}</span>
+                </div>
+              </button>
+            ))}
+            {filteredAnswers.length === 0 && <div className="muted">暂无答案记录。</div>}
           </div>
         </div>
 
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-            <div className="section-title">{t('graph.graphView')}</div>
-            <div className="toolbar">
-              <button className="btn" onClick={() => setScale((prev) => Math.min(2, prev + 0.1))}><ZoomIn size={16} /></button>
-              <button className="btn" onClick={() => setScale((prev) => Math.max(0.6, prev - 0.1))}><ZoomOut size={16} /></button>
-              <button className="btn" onClick={() => setScale(1)}><Maximize size={16} /></button>
-            </div>
-          </div>
+          <div className="section-title">{t('graph.graphView')}</div>
           <div style={{
             marginTop: '12px',
             border: '1px solid var(--color-border)',
             borderRadius: '16px',
             padding: '12px',
-            background: 'var(--color-bg)'
+            background: 'var(--color-bg)',
           }}>
-            <svg width="560" height="360" viewBox="0 0 560 360" style={{ width: '100%' }}>
-              {document.graph.edges.map((edge) => {
-                const source = document.graph.nodes.find((node) => node.id === edge.source);
-                const target = document.graph.nodes.find((node) => node.id === edge.target);
+            <svg width="520" height="360" viewBox="0 0 520 360" style={{ width: '100%' }}>
+              {graph.edges.map((edge) => {
+                const source = positionedNodes.find((item) => item.node.id === edge.source);
+                const target = positionedNodes.find((item) => item.node.id === edge.target);
                 if (!source || !target) return null;
                 return (
                   <line
@@ -179,55 +168,48 @@ const EvidenceGraph: React.FC = () => {
                   />
                 );
               })}
-              {document.graph.nodes.map((node: GraphNode) => {
+              {positionedNodes.map(({ node, x, y }) => {
                 const isSelected = node.id === selectedNodeId;
-                const isMatch = matchingNodes.has(node.id);
-                const radius = isSelected ? 18 : isMatch ? 16 : 14;
                 return (
                   <g key={node.id} onClick={() => setSelectedNodeId(node.id)} style={{ cursor: 'pointer' }}>
                     <circle
-                      cx={centerX + node.x * scale}
-                      cy={centerY + node.y * scale}
-                      r={radius}
+                      cx={centerX + x * scale}
+                      cy={centerY + y * scale}
+                      r={isSelected ? 18 : 14}
                       fill={isSelected ? 'var(--color-secondary)' : 'var(--color-primary)'}
                       opacity={0.9}
                     />
-                    <text
-                      x={centerX + node.x * scale}
-                      y={centerY + node.y * scale + 26}
-                      textAnchor="middle"
-                      fontSize="11"
-                      fill="var(--color-text)"
-                    >
-                      {node.label}
+                    <text x={centerX + x * scale} y={centerY + y * scale + 28} textAnchor="middle" fontSize="11" fill="var(--color-text)">
+                      {node.label ?? node.id}
                     </text>
                   </g>
                 );
               })}
             </svg>
           </div>
-          <div style={{ marginTop: '12px' }}>
-            <div className="muted">{t('graph.selectedNode')}</div>
-            <div style={{ fontWeight: 600 }}>{selectedNode?.label ?? t('common.none')}</div>
-            <div className="muted">{t('graph.linkedEvidence', { count: evidenceCount })}</div>
-          </div>
         </div>
-      </section>
 
-      <section className="section-card">
-        <div className="section-title">{t('graph.summaryTitle')}</div>
-        <div className="grid-3">
-          <div>
-            <div className="muted">{t('graph.summaryTotalNodes')}</div>
-            <strong>{document.graph.nodes.length}</strong>
-          </div>
-          <div>
-            <div className="muted">{t('graph.summaryTreeDepth')}</div>
-            <strong>{treeNodes.length ? Math.max(...treeNodes.map((node) => node.depth)) : 0}</strong>
-          </div>
-          <div>
-            <div className="muted">{t('graph.summaryEvidenceItems')}</div>
-            <strong>{document.evidence.length}</strong>
+        <div>
+          <div className="section-title">Node Detail</div>
+          <div style={{ display: 'grid', gap: '10px', marginTop: '12px' }}>
+            <div>
+              <div className="muted">ID</div>
+              <strong>{selectedNode?.id ?? t('common.none')}</strong>
+            </div>
+            <div>
+              <div className="muted">Label</div>
+              <strong>{selectedNode?.label ?? t('common.none')}</strong>
+            </div>
+            <div>
+              <div className="muted">Type</div>
+              <strong>{selectedNode?.type ?? t('common.none')}</strong>
+            </div>
+            <div>
+              <div className="muted">Metadata</div>
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                {selectedNode ? JSON.stringify(selectedNode.metadata ?? {}, null, 2) : t('common.none')}
+              </pre>
+            </div>
           </div>
         </div>
       </section>
@@ -236,4 +218,3 @@ const EvidenceGraph: React.FC = () => {
 };
 
 export default EvidenceGraph;
-

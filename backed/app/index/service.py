@@ -32,6 +32,8 @@ class IndexService:
         doc_ids: List[str] = []
 
         for doc in documents:
+            if doc.status in {DocumentStatus.ARCHIVED, DocumentStatus.ERROR}:
+                continue
             chunks = self._document_store.load_chunks(doc.doc_id)
             if not chunks:
                 continue
@@ -110,6 +112,15 @@ class IndexService:
         items = [IndexMeta.from_dict(item) for item in history]
         items.sort(key=lambda item: item.version, reverse=True)
         return items
+
+    def get_freshness(self) -> str:
+        return self._store.get_freshness()
+
+    def mark_stale(self) -> None:
+        self._store.mark_stale()
+
+    def mark_missing(self) -> None:
+        self._store.mark_missing()
 
     def load_current(self) -> Optional[Dict[str, object]]:
         meta = self._store.load_index_meta()

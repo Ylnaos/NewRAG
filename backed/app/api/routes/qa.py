@@ -55,6 +55,10 @@ def _build_graph(evidence: list[dict], document_store) -> dict:
 
 @router.post("/query")
 async def query(request: Request, payload: QARequest) -> dict:
+    index_service = request.app.state.index_service
+    if index_service.get_freshness() != "READY":
+        raise HTTPException(status_code=409, detail="index rebuild required before querying")
+
     qa_service = request.app.state.qa_service
     try:
         history = [_dump_model(item) for item in payload.history] if payload.history else None
@@ -64,6 +68,7 @@ async def query(request: Request, payload: QARequest) -> dict:
             rerank_k=payload.rerank_k,
             max_evidence=payload.max_evidence,
             history=history,
+            structure_prior_enabled=payload.structure_prior_enabled,
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
@@ -79,6 +84,9 @@ async def query(request: Request, payload: QARequest) -> dict:
         graph=graph,
         thought_steps=list(result.get("thought_steps") or []),
         reasoning_content=result.get("reasoning_content"),
+        verify_status=str(result.get("verify_status") or ""),
+        result_mode=str(result.get("result_mode") or "llm"),
+        fallback_reason=str(result.get("fallback_reason") or ""),
     )
     request.app.state.answer_store.save(answer_record)
     return {
@@ -93,6 +101,7 @@ async def query(request: Request, payload: QARequest) -> dict:
         "fallback_reason": result.get("fallback_reason"),
         "coarse_sections": result.get("coarse_sections"),
         "graph": graph,
+        "result_mode": result.get("result_mode"),
     }
 
 

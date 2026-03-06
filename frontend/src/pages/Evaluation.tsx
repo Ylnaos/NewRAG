@@ -1,14 +1,15 @@
-﻿import React, { useMemo, useState } from 'react';
-import { Download, Play, ClipboardList } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ClipboardList, Download, Play, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { EvalReportSummary, EvalRunRequest, EvalSampleReport, getEvaluationReport, runEvaluation as runEvaluationApi } from '../api/backend';
-
-interface EvalTask {
-  id: string;
-  nameKey: string;
-  status: 'idle' | 'running' | 'done';
-  duration: string;
-}
+import {
+  EvalReportListEntry,
+  EvalReportSummary,
+  EvalRunRequest,
+  EvalSampleReport,
+  getEvaluationReport,
+  listEvaluationReports,
+  runEvaluation as runEvaluationApi,
+} from '../api/backend';
 
 const toPercent = (value: number) => `${Math.round(value * 100)}%`;
 
@@ -16,8 +17,8 @@ const DEFAULT_EVAL_DATASET: EvalRunRequest = {
   documents: [
     {
       filename: 'eval_doc.txt',
-      content: 'The health endpoint returns ok when the service is running. Index builds combine document chunks and embeddings.'
-    }
+      content: 'The health endpoint returns ok when the service is running. Index builds combine document chunks and embeddings.',
+    },
   ],
   samples: [
     {
@@ -30,74 +31,80 @@ const DEFAULT_EVAL_DATASET: EvalRunRequest = {
       query: 'What does the index build combine?',
       expected_evidence: ['document chunks and embeddings'],
     },
-    {
-      sample_id: 'Conflict Stress',
-      query: 'Which endpoint indicates service health?',
-      expected_evidence: ['health endpoint returns ok'],
-    },
   ],
   defaults: { top_k: 5, rerank_k: 20, max_evidence: 5 },
 };
 
 const Evaluation: React.FC = () => {
   const { t } = useTranslation();
+  const [datasetText, setDatasetText] = useState(() => JSON.stringify(DEFAULT_EVAL_DATASET, null, 2));
   const [isRunning, setIsRunning] = useState(false);
   const [reportId, setReportId] = useState('');
   const [requestError, setRequestError] = useState('');
   const [summary, setSummary] = useState<EvalReportSummary | null>(null);
   const [samples, setSamples] = useState<EvalSampleReport[]>([]);
-  const [tasks, setTasks] = useState<EvalTask[]>([
-    { id: 'eval-1', nameKey: 'evaluation.tasks.golden', status: 'idle', duration: '00:00' },
-    { id: 'eval-2', nameKey: 'evaluation.tasks.policy', status: 'idle', duration: '00:00' },
-    { id: 'eval-3', nameKey: 'evaluation.tasks.conflict', status: 'idle', duration: '00:00' },
-  ]);
+  const [reports, setReports] = useState<EvalReportListEntry[]>([]);
 
-  const getTaskStatusLabel = (status: EvalTask['status']) => t(`status.${status}`);
+  const loadReports = useCallback(async () => {
+    try {
+      const response = await listEvaluationReports();
+      setReports(response.reports ?? []);
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : t('evaluation.errors.failed'));
+    }
+  }, [t]);
 
-  const formatDuration = (latencyMs?: number) => {
-    if (!latencyMs || latencyMs <= 0) return '00:00';
-    const totalSeconds = Math.max(0, Math.round(latencyMs / 1000));
-    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
-    const seconds = String(totalSeconds % 60).padStart(2, '0');
-    return `${minutes}:${seconds}`;
-  };
+  useEffect(() => {
+    void loadReports();
+  }, [loadReports]);
+
+  const parseDataset = useCallback((): EvalRunRequest => JSON.parse(datasetText) as EvalRunRequest, [datasetText]);
 
   const runEvaluation = async () => {
     if (isRunning) return;
     setIsRunning(true);
     setRequestError('');
-    setTasks((prev) => prev.map((task) => ({ ...task, status: 'running', duration: '00:00' })));
     try {
-      const response = await runEvaluationApi(DEFAULT_EVAL_DATASET);
+      const dataset = parseDataset();
+      const response = await runEvaluationApi(dataset);
       setReportId(response.report_id);
       const report = await getEvaluationReport(response.report_id).catch(() => null);
-      const resolvedSummary = report?.summary ?? response.summary;
-      const resolvedSamples = report?.samples ?? [];
-      setSummary(resolvedSummary ?? null);
-      setSamples(resolvedSamples);
-      setTasks((prev) => prev.map((task, idx) => ({
-        ...task,
-        status: 'done',
-        duration: formatDuration(resolvedSamples[idx]?.latency_ms),
-      })));
+      setSummary(report?.summary ?? response.summary);
+      setSamples(report?.samples ?? []);
+      await loadReports();
     } catch (error) {
       const message = error instanceof Error ? error.message : t('evaluation.errors.failed');
       setRequestError(message);
-      setTasks((prev) => prev.map((task) => ({ ...task, status: 'idle', duration: '00:00' })));
     } finally {
       setIsRunning(false);
     }
   };
 
-  const reportPayload = useMemo(() => ({
+  const openReport = async (nextReportId: string) => {
+    setRequestError('');
+    try {
+      const report = await getEvaluationReport(nextReportId);
+      setReportId(nextReportId);
+      setSummary(report.summary ?? null);
+      setSamples(report.samples ?? []);
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : t('evaluation.errors.failed'));
+    }
+  };
+
+  const buildReportPayload = () => ({
     generatedAt: new Date().toISOString(),
     reportId,
-    dataset: DEFAULT_EVAL_DATASET,
+    dataset: (() => {
+      try {
+        return parseDataset();
+      } catch {
+        return datasetText;
+      }
+    })(),
     summary,
     samples,
-    tasks: tasks.map((task) => ({ ...task, name: t(task.nameKey) })),
-    version: 'v1.0.0',
-  }), [reportId, samples, summary, tasks, t]);
+  });
 
   const downloadFile = (filename: string, content: string, mime: string) => {
     const blob = new Blob([content], { type: mime });
@@ -109,7 +116,7 @@ const Evaluation: React.FC = () => {
   };
 
   const exportJson = () => {
-    downloadFile('evaluation-report.json', JSON.stringify(reportPayload, null, 2), 'application/json');
+    downloadFile('evaluation-report.json', JSON.stringify(buildReportPayload(), null, 2), 'application/json');
   };
 
   const exportCsv = () => {
@@ -157,7 +164,6 @@ const Evaluation: React.FC = () => {
 
   const formatPercent = (value?: number) => (value === null || value === undefined ? 'N/A' : toPercent(value));
   const formatMs = (value?: number) => (value === null || value === undefined ? 'N/A' : `${Math.round(value)}ms`);
-  const canExport = Boolean(summary && reportId);
 
   return (
     <div className="page">
@@ -166,56 +172,55 @@ const Evaluation: React.FC = () => {
           <div>
             <div className="section-title">{t('evaluation.title')}</div>
             <div className="muted">{t('evaluation.subtitle')}</div>
-            {requestError && <div className="muted" style={{ marginTop: '8px' }}>{requestError}</div>}
+            {requestError && <div className="muted" style={{ marginTop: '8px', color: 'var(--color-danger)' }}>{requestError}</div>}
           </div>
           <div className="toolbar">
-            <button className="btn btn-primary" onClick={runEvaluation} disabled={isRunning}>
+            <button className="btn" onClick={() => setDatasetText(JSON.stringify(DEFAULT_EVAL_DATASET, null, 2))}>
+              <ClipboardList size={16} />
+              {t('evaluation.loadPreset')}
+            </button>
+            <button className="btn" onClick={() => {
+              try {
+                setDatasetText(JSON.stringify(parseDataset(), null, 2));
+                setRequestError('');
+              } catch (error) {
+                setRequestError(error instanceof Error ? error.message : t('evaluation.errors.failed'));
+              }
+            }}>
+              <RefreshCw size={16} />
+              {t('evaluation.formatJson')}
+            </button>
+            <button className="btn btn-primary" onClick={() => void runEvaluation()} disabled={isRunning}>
               <Play size={16} />
               {isRunning ? t('evaluation.running') : t('evaluation.run')}
             </button>
-            <button className="btn" onClick={exportJson} disabled={!canExport || isRunning}>
+            <button className="btn" onClick={exportJson} disabled={!summary && !reportId}>
               <Download size={16} />
               {t('evaluation.exportJson')}
             </button>
-            <button className="btn" onClick={exportCsv} disabled={!canExport || isRunning}>
+            <button className="btn" onClick={exportCsv} disabled={!summary || isRunning}>
               <Download size={16} />
               {t('evaluation.exportCsv')}
             </button>
           </div>
         </div>
+      </section>
 
-        <div style={{ display: 'grid', gap: '12px', marginTop: '16px' }}>
-          {tasks.map((task) => {
-            const badgeClass = task.status === 'done'
-              ? 'badge-success'
-              : task.status === 'running'
-                ? 'badge-warning'
-                : 'badge-outline';
-            return (
-              <div key={task.id} style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr 1fr',
-                gap: '12px',
-                padding: '12px',
-                borderRadius: '12px',
-                border: '1px solid var(--color-border)',
-                background: 'var(--color-bg)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ClipboardList size={16} />
-                  <span>{t(task.nameKey)}</span>
-                </div>
-                <span className={`badge ${badgeClass}`}>{getTaskStatusLabel(task.status)}</span>
-                <span className="muted">{task.duration}</span>
-              </div>
-            );
-          })}
-        </div>
+      <section className="section-card">
+        <div className="section-title">{t('evaluation.datasetTitle')}</div>
+        <div className="muted" style={{ marginBottom: '12px' }}>{t('evaluation.datasetHint')}</div>
+        <textarea
+          className="input"
+          value={datasetText}
+          onChange={(event) => setDatasetText(event.target.value)}
+          rows={18}
+          style={{ width: '100%', resize: 'vertical', fontFamily: 'monospace' }}
+        />
       </section>
 
       <section className="section-card">
         <div className="section-title">{t('evaluation.metricsTitle')}</div>
-        <div className="grid-3">
+        <div className="grid-3" style={{ marginTop: '12px' }}>
           <div>
             <div className="muted">{t('evaluation.metrics.recall')}</div>
             <strong>{formatPercent(summary?.avg_recall)}</strong>
@@ -244,6 +249,55 @@ const Evaluation: React.FC = () => {
             <div className="muted">{t('evaluation.metrics.p95Latency')}</div>
             <strong>{formatMs(summary?.p95_latency_ms)}</strong>
           </div>
+          <div>
+            <div className="muted">{t('evaluation.reportId')}</div>
+            <strong>{reportId || 'N/A'}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-card">
+        <div className="section-title">{t('evaluation.sampleResults')}</div>
+        <div style={{ display: 'grid', gap: '12px', marginTop: '12px' }}>
+          {samples.map((sample) => (
+            <div key={sample.sample_id} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '12px', background: 'var(--color-bg)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                <strong>{sample.sample_id}</strong>
+                <span className="badge badge-outline">{formatMs(sample.latency_ms)}</span>
+              </div>
+              <div className="muted" style={{ marginTop: '6px' }}>{sample.query}</div>
+              <div className="grid-3" style={{ marginTop: '12px' }}>
+                <div><span className="muted">Recall</span><br /><strong>{formatPercent(sample.recall)}</strong></div>
+                <div><span className="muted">MRR</span><br /><strong>{formatPercent(sample.mrr)}</strong></div>
+                <div><span className="muted">NDCG</span><br /><strong>{formatPercent(sample.ndcg)}</strong></div>
+              </div>
+            </div>
+          ))}
+          {samples.length === 0 && <div className="muted">{t('evaluation.noSamples')}</div>}
+        </div>
+      </section>
+
+      <section className="section-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div className="section-title">{t('evaluation.reportHistory')}</div>
+          <button className="btn" onClick={() => void loadReports()}>
+            <RefreshCw size={16} />
+            {t('evaluation.refreshReports')}
+          </button>
+        </div>
+        <div style={{ display: 'grid', gap: '12px', marginTop: '12px' }}>
+          {reports.map((report) => (
+            <button
+              key={report.report_id}
+              className="btn"
+              style={{ justifyContent: 'space-between' }}
+              onClick={() => void openReport(report.report_id)}
+            >
+              <span>{report.report_id}</span>
+              <span className="muted">{report.created_at ? new Date(report.created_at).toLocaleString() : t('common.empty')}</span>
+            </button>
+          ))}
+          {reports.length === 0 && <div className="muted">{t('evaluation.noReports')}</div>}
         </div>
       </section>
     </div>

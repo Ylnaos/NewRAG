@@ -1,6 +1,7 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timezone
+
 from fastapi import APIRouter, Request
 
 router = APIRouter()
@@ -30,10 +31,12 @@ async def health(request: Request) -> dict:
 async def ready(request: Request) -> dict:
     settings = request.app.state.settings
     errors = settings.validate()
-    index_meta = request.app.state.index_service.get_status()
+    index_service = request.app.state.index_service
+    index_meta = index_service.get_status()
     return {
         "ready": len(errors) == 0,
         "errors": errors,
         "version": settings.app_version,
         "index_status": index_meta.to_dict() if index_meta else None,
+        "index_freshness": index_service.get_freshness(),
     }

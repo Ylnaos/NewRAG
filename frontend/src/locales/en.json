@@ -1,4 +1,4 @@
-﻿{
+{
   "app": {
     "title": "NewRAG System",
     "loading": "Loading..."
@@ -112,6 +112,12 @@
       "checkContext": "Checking relevant context",
       "draft": "Drafting the response",
       "summarize": "Summarizing long-form input for clarity"
+    },
+    "resultMode": {
+      "fallback": "[Evidence fallback]",
+      "memory": "[Conversation memory]",
+      "uploading": "Uploading attachments...",
+      "reindexing": "Rebuilding index..."
     }
   },
   "documents": {
@@ -155,7 +161,8 @@
       "indexed": "INDEXED",
       "ready": "READY",
       "error": "ERROR",
-      "archived": "ARCHIVED"
+      "archived": "ARCHIVED",
+      "queued": "QUEUED"
     },
     "seed": {
       "overviewTitle": "{{name}} Overview",
@@ -227,7 +234,15 @@
     "summaryEvidenceItems": "Evidence Items",
     "errors": {
       "tree": "Failed to load document tree."
-    }
+    },
+    "noAnswers": "No answers available yet.",
+    "answerLabel": "Answer",
+    "answerPreview": "Answer Preview",
+    "resultMode": "Result Mode",
+    "verifyStatus": "Verify Status",
+    "nodesTitle": "Graph Nodes",
+    "noGraphNodes": "No graph nodes available.",
+    "questionLabel": "Question"
   },
   "index": {
     "overviewTitle": "Index Overview",
@@ -321,6 +336,17 @@
     "errors": {
       "noAnswer": "No answer returned.",
       "queryFailed": "Query failed."
+    },
+    "answerId": "Answer ID",
+    "runState": {
+      "submitting": "Submitting",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "resultMode": {
+      "llm": "LLM answer",
+      "fallback_evidence": "Evidence fallback",
+      "memory": "Conversation memory"
     }
   },
   "evaluation": {
@@ -347,7 +373,17 @@
     },
     "errors": {
       "failed": "Evaluation failed."
-    }
+    },
+    "loadPreset": "Load Smoke Preset",
+    "formatJson": "Format JSON",
+    "datasetTitle": "Evaluation Dataset",
+    "datasetHint": "Edit the payload directly before running the evaluation.",
+    "reportId": "Report ID",
+    "sampleResults": "Sample Results",
+    "noSamples": "No sample results yet.",
+    "reportHistory": "Report History",
+    "refreshReports": "Refresh Reports",
+    "noReports": "No saved reports yet."
   },
   "system": {
     "title": "System Health",
@@ -648,6 +684,9 @@
       "longformQuestion": "Build explainable hierarchical retrieval for longform QA.",
       "longformAnswer": "Apply structure-aware retrieval and adaptive fusion for conclusions.",
       "longformSummary": "Emphasizes chapter alignment, evidence linking, and conflict checks."
-    }
+    },
+    "noAnswers": "No answers available yet.",
+    "resultMode": "Result Mode",
+    "verifyStatus": "Verify Status"
   }
 }

@@ -19,6 +19,9 @@ class AnswerRecord:
     graph: Dict[str, Any] = field(default_factory=dict)
     thought_steps: List[str] = field(default_factory=list)
     reasoning_content: Optional[str] = None
+    verify_status: str = ""
+    result_mode: str = "llm"
+    fallback_reason: str = ""
     created_at: datetime = field(default_factory=_utcnow)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -30,6 +33,9 @@ class AnswerRecord:
             "graph": self.graph,
             "thought_steps": list(self.thought_steps),
             "reasoning_content": self.reasoning_content,
+            "verify_status": self.verify_status,
+            "result_mode": self.result_mode,
+            "fallback_reason": self.fallback_reason,
             "created_at": self.created_at.isoformat(),
         }
 
@@ -42,6 +48,9 @@ class AnswerRecord:
         graph: Dict[str, Any],
         thought_steps: Optional[List[str]] = None,
         reasoning_content: Optional[str] = None,
+        verify_status: str = "",
+        result_mode: str = "llm",
+        fallback_reason: str = "",
     ) -> "AnswerRecord":
         return cls(
             answer_id=str(uuid.uuid4()),
@@ -51,6 +60,9 @@ class AnswerRecord:
             graph=graph,
             thought_steps=list(thought_steps or []),
             reasoning_content=reasoning_content,
+            verify_status=verify_status,
+            result_mode=result_mode or "llm",
+            fallback_reason=fallback_reason,
         )
 
     @classmethod
@@ -63,6 +75,9 @@ class AnswerRecord:
             graph=dict(payload.get("graph", {}) or {}),
             thought_steps=list(payload.get("thought_steps", []) or []),
             reasoning_content=payload.get("reasoning_content"),
+            verify_status=str(payload.get("verify_status", "")),
+            result_mode=str(payload.get("result_mode", "llm") or "llm"),
+            fallback_reason=str(payload.get("fallback_reason", "")),
             created_at=_parse_dt(payload.get("created_at")),
         )
 

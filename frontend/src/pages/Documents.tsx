@@ -17,7 +17,7 @@ const Documents: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { confirm } = useConfirm();
-  const { documents, addFiles, deleteDocument, archiveDocument, restoreDocument, cacheAgeMs, cacheStale } = useDocuments();
+  const { documents, addFiles, deleteDocument, archiveDocument, restoreDocument, cacheAgeMs, cacheStale, errorMessage } = useDocuments();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<DocumentStatus | 'ALL'>('ALL');
   const [isDragging, setIsDragging] = useState(false);
@@ -30,6 +30,8 @@ const Documents: React.FC = () => {
     switch (status) {
       case 'RAW':
         return t('documents.status.raw');
+      case 'QUEUED':
+        return t('documents.status.queued');
       case 'PARSED':
         return t('documents.status.parsed');
       case 'CHUNKED':
@@ -73,7 +75,7 @@ const Documents: React.FC = () => {
 
   const handleFiles = (files: File[]) => {
     if (files.length === 0) return;
-    addFiles(files);
+    void addFiles(files).catch(() => {});
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -91,7 +93,7 @@ const Documents: React.FC = () => {
       confirmText: t('documents.delete'),
     });
     if (ok) {
-      deleteDocument(id);
+      void deleteDocument(id).catch(() => {});
     }
   };
 
@@ -109,7 +111,7 @@ const Documents: React.FC = () => {
 
   const handleArchiveConfirm = () => {
     if (!archiveTarget) return;
-    archiveDocument(archiveTarget.id, archivePath.trim());
+    void archiveDocument(archiveTarget.id, archivePath.trim()).catch(() => {});
     closeArchiveDialog();
   };
 
@@ -129,7 +131,7 @@ const Documents: React.FC = () => {
       confirmText: t('documents.restore'),
     });
     if (ok) {
-      restoreDocument(id);
+      void restoreDocument(id).catch(() => {});
     }
   };
 
@@ -160,6 +162,11 @@ const Documents: React.FC = () => {
                 minutes: cacheAgeMin,
               })}
             </div>
+            {errorMessage && (
+              <div className="muted" style={{ marginTop: '6px', color: 'var(--color-danger)' }}>
+                {errorMessage}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -220,6 +227,7 @@ const Documents: React.FC = () => {
           >
             <option value="ALL">{t('documents.statusAll')}</option>
             <option value="RAW">{t('documents.status.raw')}</option>
+            <option value="QUEUED">{t('documents.status.queued')}</option>
             <option value="PARSED">{t('documents.status.parsed')}</option>
             <option value="CHUNKED">{t('documents.status.chunked')}</option>
             <option value="EMBEDDED">{t('documents.status.embedded')}</option>

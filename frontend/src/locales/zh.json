@@ -1,4 +1,4 @@
-﻿{
+{
   "app": {
     "title": "NewRAG 系统",
     "loading": "加载中..."
@@ -112,6 +112,12 @@
       "checkContext": "检查相关上下文",
       "draft": "撰写回复",
       "summarize": "对长文本进行摘要以便理解"
+    },
+    "resultMode": {
+      "fallback": "[证据降级回答]",
+      "memory": "[对话记忆回答]",
+      "uploading": "正在上传附件...",
+      "reindexing": "正在重建索引..."
     }
   },
   "documents": {
@@ -155,7 +161,8 @@
       "indexed": "已索引",
       "ready": "就绪",
       "error": "错误",
-      "archived": "已归档"
+      "archived": "已归档",
+      "queued": "排队中"
     },
     "seed": {
       "overviewTitle": "{{name}} 概览",
@@ -227,7 +234,15 @@
     "summaryEvidenceItems": "证据条目",
     "errors": {
       "tree": "加载文档结构失败。"
-    }
+    },
+    "noAnswers": "当前还没有可用答案。",
+    "answerLabel": "答案",
+    "answerPreview": "答案预览",
+    "resultMode": "结果模式",
+    "verifyStatus": "校验状态",
+    "nodesTitle": "图谱节点",
+    "noGraphNodes": "当前没有可用图谱节点。",
+    "questionLabel": "问题"
   },
   "index": {
     "overviewTitle": "索引概览",
@@ -321,6 +336,17 @@
     "errors": {
       "noAnswer": "未返回答案。",
       "queryFailed": "查询失败。"
+    },
+    "answerId": "答案 ID",
+    "runState": {
+      "submitting": "请求中",
+      "completed": "已完成",
+      "failed": "已失败"
+    },
+    "resultMode": {
+      "llm": "模型回答",
+      "fallback_evidence": "证据降级",
+      "memory": "对话记忆"
     }
   },
   "evaluation": {
@@ -347,7 +373,17 @@
     },
     "errors": {
       "failed": "评测失败。"
-    }
+    },
+    "loadPreset": "加载冒烟预设",
+    "formatJson": "格式化 JSON",
+    "datasetTitle": "评测数据集",
+    "datasetHint": "运行评测前可直接编辑请求载荷。",
+    "reportId": "报告 ID",
+    "sampleResults": "样本结果",
+    "noSamples": "当前还没有样本结果。",
+    "reportHistory": "历史报告",
+    "refreshReports": "刷新报告",
+    "noReports": "当前还没有历史报告。"
   },
   "system": {
     "title": "系统健康",
@@ -648,6 +684,9 @@
       "longformQuestion": "面向长文档问答，构建可解释的层级检索链。",
       "longformAnswer": "通过结构感知检索与自适应证据融合形成长文档结论。",
       "longformSummary": "长文档链强调章节对齐、证据串联与冲突校验。"
-    }
+    },
+    "noAnswers": "当前还没有可用答案。",
+    "resultMode": "结果模式",
+    "verifyStatus": "校验状态"
   }
 }

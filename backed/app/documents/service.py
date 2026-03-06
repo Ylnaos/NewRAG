@@ -130,6 +130,50 @@ class DocumentService:
             return None
         return build_tree(parsed["sections"])
 
+    def mark_queued(self, doc_id: str) -> None:
+        self._update_status(doc_id, DocumentStatus.QUEUED)
+
+    def delete_document(self, doc_id: str) -> bool:
+        return self._store.delete_document(doc_id)
+
+    def archive_document(
+        self,
+        doc_id: str,
+        restore: bool = False,
+        archive_path: Optional[str] = None,
+    ) -> Optional[Document]:
+        doc = self._store.load_document(doc_id)
+        if doc is None:
+            return None
+        meta = dict(doc.meta or {})
+        if restore:
+            previous = meta.pop("archived_from", None)
+            if previous:
+                try:
+                    next_status = DocumentStatus(previous)
+                except ValueError:
+                    next_status = DocumentStatus.RAW
+            else:
+                next_status = DocumentStatus.RAW
+        else:
+            if archive_path is not None:
+                cleaned = _normalize_archive_path(archive_path)
+                if cleaned:
+                    meta["archive_path"] = cleaned
+                else:
+                    meta.pop("archive_path", None)
+            if doc.status != DocumentStatus.ARCHIVED:
+                meta["archived_from"] = doc.status.value
+            next_status = DocumentStatus.ARCHIVED
+        updated = replace(
+            doc,
+            status=next_status,
+            meta=meta,
+            updated_at=datetime.now(timezone.utc),
+        )
+        self._store.save_document(updated)
+        return updated
+
     def _update_status(self, doc_id: str, status: DocumentStatus) -> None:
         doc = self._store.load_document(doc_id)
         if doc is None:
@@ -179,52 +223,11 @@ class DocumentService:
         )
         return [root], []
 
-    def delete_document(self, doc_id: str) -> bool:
-        return self._store.delete_document(doc_id)
-
-    def archive_document(
-        self,
-        doc_id: str,
-        restore: bool = False,
-        archive_path: Optional[str] = None,
-    ) -> Optional[Document]:
-        doc = self._store.load_document(doc_id)
-        if doc is None:
-            return None
-        meta = dict(doc.meta or {})
-        if restore:
-            previous = meta.pop("archived_from", None)
-            if previous:
-                try:
-                    next_status = DocumentStatus(previous)
-                except ValueError:
-                    next_status = DocumentStatus.RAW
-            else:
-                next_status = DocumentStatus.RAW
-        else:
-            if archive_path is not None:
-                cleaned = _normalize_archive_path(archive_path)
-                if cleaned:
-                    meta["archive_path"] = cleaned
-                else:
-                    meta.pop("archive_path", None)
-            if doc.status != DocumentStatus.ARCHIVED:
-                meta["archived_from"] = doc.status.value
-            next_status = DocumentStatus.ARCHIVED
-        updated = replace(
-            doc,
-            status=next_status,
-            meta=meta,
-            updated_at=datetime.now(timezone.utc),
-        )
-        self._store.save_document(updated)
-        return updated
-
     def _estimate_pages(self, path: Path, paragraphs: List[Paragraph]) -> int:
         suffix = path.suffix.lower()
         if suffix == ".pdf":
             try:
-                from PyPDF2 import PdfReader
+                from pypdf import PdfReader
 
                 reader = PdfReader(str(path))
                 return max(1, len(reader.pages))

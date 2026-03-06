@@ -24,6 +24,7 @@ def test_qa_service_mock_answer(tmp_path, monkeypatch) -> None:
     result = qa_service.answer("What is in detail?", top_k=2, rerank_k=4, max_evidence=2)
     assert result["answer"]
     assert result["verify_status"] == "PASS"
+    assert result["result_mode"] == "llm"
     assert result["citations"]
 
 
@@ -34,6 +35,7 @@ def test_qa_service_fallback_when_disabled(tmp_path, monkeypatch) -> None:
     result = qa_service.answer("What is in detail?", top_k=2, rerank_k=4, max_evidence=2)
     assert result["answer"]
     assert result["verify_status"] == "FALLBACK"
+    assert result["result_mode"] == "fallback_evidence"
     assert result["fallback_reason"].startswith("llm_error")
 
 
@@ -52,6 +54,7 @@ def test_qa_service_falls_back_when_verification_fails_even_if_web_search_enable
     result = qa_service.answer("What is in detail?", top_k=2, rerank_k=4, max_evidence=2)
     assert call_state.get("enable_web_search") is False
     assert result["verify_status"] == "FALLBACK"
+    assert result["result_mode"] == "fallback_evidence"
     assert result["fallback_reason"] == "verification_failed"
 
 
@@ -59,8 +62,6 @@ def test_qa_service_allows_short_answer_when_supported_by_evidence(tmp_path, mon
     app = _prepare_app(tmp_path, monkeypatch, "mock")
     qa_service = app.state.qa_service
 
-    # A short answer (2 tokens) should not be forced into fallback when it is fully supported
-    # by the retrieved evidence.
     def fake_generate_with_meta(prompt: str, *args, **kwargs) -> LLMGenerateResult:
         return LLMGenerateResult(text="Hello world.")
 
@@ -69,6 +70,7 @@ def test_qa_service_allows_short_answer_when_supported_by_evidence(tmp_path, mon
     result = qa_service.answer("intro", top_k=2, rerank_k=4, max_evidence=2)
     assert result["verify_status"] == "PASS"
     assert result["fallback_reason"] == ""
+    assert result["result_mode"] == "llm"
     assert "Hello world" in result["answer"]
 
 
@@ -95,6 +97,6 @@ def test_qa_service_uses_conversation_history_for_memory(tmp_path, monkeypatch) 
     )
     assert "Conversation history:" in captured["prompt"]
     assert "my name is Alice" in captured["prompt"]
-    assert result["verify_status"] == "PASS"
     assert result["fallback_reason"] == ""
+    assert result["result_mode"] == "memory"
     assert any(item.get("doc_id") == "conversation-memory" for item in result["citations"])

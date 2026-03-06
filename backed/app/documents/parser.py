@@ -1,12 +1,12 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 from pathlib import Path
 from typing import List, Optional, Tuple
 import uuid
 
-from PyPDF2 import PdfReader
 from docx import Document as DocxDocument
+from pypdf import PdfReader
 
 from .models import Paragraph, Section
 

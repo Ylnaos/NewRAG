@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional
 
@@ -16,16 +16,18 @@ class QARequest(BaseModel):
     rerank_k: int = Field(20, ge=1, le=200)
     max_evidence: int = Field(5, ge=1, le=20)
     history: List[QAHistoryTurn] = Field(default_factory=list, max_length=16)
+    structure_prior_enabled: bool = True
 
 
 class FeedbackRequest(BaseModel):
+    answer_id: str = Field(..., min_length=1)
     node_id: str = Field(..., min_length=1)
-    score: int = Field(...)
+    score: int = Field(..., ge=0, le=5)
     comment: Optional[str] = None
     doc_id: Optional[str] = None
     uncertain: Optional[bool] = None
     conflict: Optional[bool] = None
-    evidence_ids: Optional[List[str]] = None
+    evidence_ids: List[str] = Field(default_factory=list)
 
 
 class IndexBuildRequest(BaseModel):
@@ -46,20 +48,20 @@ class ArchiveDocumentRequest(BaseModel):
 
 
 class RetrievalWeightsIn(BaseModel):
-    sparse_weight: Optional[float] = None
-    dense_weight: Optional[float] = None
-    structure_weight: Optional[float] = None
-    overlap_weight: Optional[float] = None
-    coarse_weight: Optional[float] = None
+    sparse_weight: Optional[float] = Field(None, ge=0, le=1)
+    dense_weight: Optional[float] = Field(None, ge=0, le=1)
+    structure_weight: Optional[float] = Field(None, ge=0, le=1)
+    overlap_weight: Optional[float] = Field(None, ge=0, le=1)
+    coarse_weight: Optional[float] = Field(None, ge=0, le=1)
 
 
 class EvidenceWeightsIn(BaseModel):
-    match_weight: Optional[float] = None
-    consistency_weight: Optional[float] = None
-    diversity_weight: Optional[float] = None
-    candidate_weight: Optional[float] = None
-    confidence_weight: Optional[float] = None
-    redundancy_penalty: Optional[float] = None
+    match_weight: Optional[float] = Field(None, ge=0, le=1)
+    consistency_weight: Optional[float] = Field(None, ge=0, le=1)
+    diversity_weight: Optional[float] = Field(None, ge=0, le=1)
+    candidate_weight: Optional[float] = Field(None, ge=0, le=1)
+    confidence_weight: Optional[float] = Field(None, ge=0, le=1)
+    redundancy_penalty: Optional[float] = Field(None, ge=0, le=1)
 
 
 class ModelWeightsRequest(BaseModel):

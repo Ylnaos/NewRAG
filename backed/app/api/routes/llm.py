@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import time
+from urllib.parse import urlparse
+
 from fastapi import APIRouter, HTTPException, Request
 
 from app.api.schemas import LLMConfigRequest
@@ -21,12 +23,25 @@ async def get_config(request: Request) -> dict:
 async def update_config(request: Request, payload: LLMConfigRequest) -> dict:
     store = request.app.state.llm_config_store
     current = store.load()
-    mode = payload.mode or current.mode
+    mode = (payload.mode or current.mode or "mock").strip().lower()
     if mode not in {"mock", "disabled", "moonshot"}:
         raise HTTPException(status_code=400, detail="unsupported llm mode")
+
+    base_url = (payload.base_url if payload.base_url is not None else current.base_url).strip()
+    model_id = (payload.model_id if payload.model_id is not None else current.model_id).strip()
+    api_key = (payload.api_key if payload.api_key is not None else store.load_api_key()).strip()
+
+    if mode == "moonshot":
+        if not _is_valid_http_url(base_url):
+            raise HTTPException(status_code=400, detail="valid base_url required for moonshot mode")
+        if not model_id:
+            raise HTTPException(status_code=400, detail="model_id required for moonshot mode")
+        if not api_key:
+            raise HTTPException(status_code=400, detail="api_key required for moonshot mode")
+
     updated = LLMConfig(
-        base_url=payload.base_url or current.base_url,
-        model_id=payload.model_id or current.model_id,
+        base_url=base_url,
+        model_id=model_id,
         mode=mode,
         enable_web_search=payload.enable_web_search
         if payload.enable_web_search is not None
@@ -40,9 +55,11 @@ async def update_config(request: Request, payload: LLMConfigRequest) -> dict:
     llm_client.mode = updated.mode
     llm_client.enable_web_search = updated.enable_web_search
     llm_client.enable_thinking = updated.enable_thinking
-    if payload.api_key:
-        llm_client.api_key = payload.api_key
-        store.save_api_key(payload.api_key)
+    if payload.api_key is not None:
+        llm_client.api_key = api_key
+        store.save_api_key(api_key)
+    elif api_key:
+        llm_client.api_key = api_key
     return {"config": updated.to_dict()}
 
 
@@ -64,22 +81,21 @@ async def list_models(request: Request) -> dict:
 async def test_connection(request: Request) -> dict:
     llm_client = request.app.state.llm_client
     mode = (llm_client.mode or "").strip().lower()
+    if mode == "disabled":
+        raise HTTPException(status_code=409, detail="LLM disabled")
+
     start = time.perf_counter()
     try:
         text = llm_client.generate("ping", temperature=0.0, max_tokens=8)
     except NotImplementedError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:
-        latency_ms = int((time.perf_counter() - start) * 1000)
-        status = "disabled" if mode == "disabled" else "error"
-        return {
-            "status": status,
-            "mode": mode or "unknown",
-            "latency_ms": latency_ms,
-            "detail": str(exc),
-        }
+        if mode == "mock":
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"llm_error:{type(exc).__name__}") from exc
+
     latency_ms = int((time.perf_counter() - start) * 1000)
     if mode == "mock":
         return {
@@ -90,3 +106,10 @@ async def test_connection(request: Request) -> dict:
             "detail": "LLM is running in mock mode; no external request was made.",
         }
     return {"status": "ok", "mode": mode or "unknown", "latency_ms": latency_ms, "sample": text}
+
+
+def _is_valid_http_url(value: str) -> bool:
+    if not value:
+        return False
+    parsed = urlparse(value)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)

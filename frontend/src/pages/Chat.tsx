@@ -37,7 +37,7 @@ const Chat: React.FC = () => {
     setEnableTuning,
   } = useModelConfig();
   const { currentSession, appendMessage, updateMessage } = useChat();
-  const { documents } = useDocuments();
+  const { documents, addFiles, triggerIndexBuild } = useDocuments();
   const [input, setInput] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [userAvatar, setUserAvatar] = useState('');
@@ -136,7 +136,8 @@ const Chat: React.FC = () => {
 
   const handleSend = async () => {
     const queryText = input.trim();
-    if (!queryText && files.length === 0) return;
+    const pendingFiles = [...files];
+    if (!queryText && pendingFiles.length === 0) return;
     const historyForRequest: QAHistoryTurn[] = messages
       .filter((msg) => (msg.role === 'user' || msg.role === 'assistant') && msg.content.trim().length > 0)
       .slice(-12)
@@ -154,7 +155,7 @@ const Chat: React.FC = () => {
       id: Date.now().toString(),
       role: 'user',
       content: queryText,
-      attachments: [...files],
+      attachments: pendingFiles,
     };
 
     const assistantId = (Date.now() + 1).toString();
@@ -190,12 +191,36 @@ const Chat: React.FC = () => {
     }
 
     try {
+      if (pendingFiles.length > 0) {
+        updateMessage(assistantId, (msg) => ({
+          ...msg,
+          content: thinkingEnabled ? '' : t('chat.resultMode.uploading'),
+          thought: msg.thought ? {
+            ...msg.thought,
+            steps: [
+              t('chat.thoughtSteps.reviewAttachments', { count: pendingFiles.length }),
+              t('chat.resultMode.uploading'),
+              t('chat.resultMode.reindexing'),
+            ],
+          } : undefined,
+        }));
+        await addFiles(pendingFiles);
+        await triggerIndexBuild();
+      }
+
       const response = await queryQA({
         query: queryText,
         ...retrievalParams,
         history: historyForRequest,
+        structure_prior_enabled: true,
       });
-      const answer = response.answer ? String(response.answer) : t('chat.error.noAnswer');
+      const rawAnswer = response.answer ? String(response.answer) : t('chat.error.noAnswer');
+      const answerPrefix = response.result_mode === 'fallback_evidence'
+        ? t('chat.resultMode.fallback')
+        : response.result_mode === 'memory'
+          ? t('chat.resultMode.memory')
+          : '';
+      const answer = answerPrefix ? `${answerPrefix}\n\n${rawAnswer}` : rawAnswer;
       const nextThoughtSteps = Array.isArray(response.thought_steps) && response.thought_steps.length > 0
         ? response.thought_steps.map((item) => String(item))
         : (typeof response.reasoning_content === 'string' && response.reasoning_content.trim()

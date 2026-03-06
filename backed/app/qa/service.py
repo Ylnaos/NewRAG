@@ -30,24 +30,28 @@ class QAService:
         rerank_k: int = 20,
         max_evidence: int = 5,
         history: Optional[List[Dict[str, str]]] = None,
+        *,
+        structure_prior_enabled: bool = True,
     ) -> Dict[str, object]:
-        retrieval = self._retriever.retrieve(query, top_k=top_k, rerank_k=rerank_k)
+        retrieval = self._retriever.retrieve(
+            query,
+            top_k=top_k,
+            rerank_k=rerank_k,
+            structure_prior_enabled=structure_prior_enabled,
+        )
         fine_chunks: List[Dict[str, object]] = retrieval.get("fine_chunks", [])
         evidence = self._evidence_fusion.fuse(query, fine_chunks, max_evidence=max_evidence)
         conversation_history = _normalize_history(history)
         memory_evidence = _history_to_evidence(conversation_history)
         generation_candidates = [*memory_evidence, *evidence]
+        memory_query = bool(memory_evidence) and _is_conversational_memory_query(query)
 
-        # Avoid confusing the LLM with explicitly conflicting/redundant evidence.
-        # We still return the full evidence list to the caller for transparency.
         generation_evidence = [
             item
             for item in generation_candidates
             if not item.get("conflict_flag") and not item.get("redundant_flag")
         ] or list(generation_candidates)
 
-        # Only allow $web_search when we have no local evidence.
-        # This avoids unnecessary tool-call loops (and rate limits) for in-corpus questions.
         allow_web_search = bool(self._llm_client.enable_web_search) and not generation_evidence
         prompt = build_structured_prompt(
             query,
@@ -62,6 +66,7 @@ class QAService:
         fallback_reason = ""
         verify_result = {"status": "FAIL", "overlap": 0.0}
         verify_status = "PASS"
+        result_mode = "memory" if memory_query else "llm"
 
         try:
             generation = self._llm_client.generate_with_meta(
@@ -76,7 +81,6 @@ class QAService:
             graph = parsed.graph
             reasoning_content = generation.reasoning_content
         except Exception as exc:  # noqa: BLE001
-            # Preserve a short, sanitized error message for the UI without leaking request headers/keys.
             detail = " ".join(str(exc).split())
             fallback_reason = f"llm_error:{type(exc).__name__}"
             if detail:
@@ -89,13 +93,10 @@ class QAService:
             verify_result = self._verifier.verify(answer, generation_evidence)
             if verify_result.get("status") != "PASS":
                 if allow_web_search:
-                    # When web search is enabled, allow answers that go beyond local evidence,
-                    # but still expose verification details to the caller.
                     verify_status = "UNVERIFIED"
-                elif memory_evidence and _is_conversational_memory_query(query):
-                    # Follow-up memory questions ("what did I just say?") rely on chat turns
-                    # that may not overlap strongly with indexed corpus tokens.
+                elif memory_query:
                     verify_status = "MEMORY"
+                    result_mode = "memory"
                 else:
                     fallback_reason = "verification_failed"
 
@@ -105,6 +106,7 @@ class QAService:
             reasoning_content = None
             thought_steps = []
             graph = None
+            result_mode = "fallback_evidence"
 
         citations = [
             {
@@ -127,6 +129,7 @@ class QAService:
             "verify_detail": verify_result,
             "fallback_reason": fallback_reason,
             "coarse_sections": retrieval.get("coarse_sections", []),
+            "result_mode": result_mode,
         }
 
 

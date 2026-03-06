@@ -1,12 +1,12 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Dict, List, Tuple
 
-from app.index.bm25 import BM25Indexer
-from app.index.vector import VectorIndexer
-from app.index.tokenizer import tokenize
 from app.core.weights import RetrievalWeights
+from app.index.bm25 import BM25Indexer
 from app.index.service import IndexService
+from app.index.tokenizer import tokenize
+from app.index.vector import VectorIndexer
 
 
 class RetrieverService:
@@ -14,7 +14,14 @@ class RetrieverService:
         self._index_service = index_service
         self._weights = weights or RetrievalWeights()
 
-    def retrieve(self, query: str, top_k: int = 5, rerank_k: int = 20) -> Dict[str, List[Dict[str, object]]]:
+    def retrieve(
+        self,
+        query: str,
+        top_k: int = 5,
+        rerank_k: int = 20,
+        *,
+        structure_prior_enabled: bool = True,
+    ) -> Dict[str, List[Dict[str, object]]]:
         data = self._index_service.load_current()
         if data is None:
             raise ValueError("index not ready")
@@ -27,7 +34,13 @@ class RetrieverService:
         vector_dim = int(vector_data.get("dim", 128))
         vector_scores = VectorIndexer(vector_dim).score(query, vector_data)
 
-        combined = self._combine_scores(query, bm25_scores, vector_scores, corpus)
+        combined = self._combine_scores(
+            query,
+            bm25_scores,
+            vector_scores,
+            corpus,
+            structure_prior_enabled=structure_prior_enabled,
+        )
         coarse_sections = self._coarse_rank(combined, corpus, top_k)
 
         reranked = self._rerank(query, combined, corpus, rerank_k)
@@ -41,6 +54,8 @@ class RetrieverService:
         bm25_scores: List[Tuple[int, float]],
         vector_scores: List[Tuple[int, float]],
         corpus: List[Dict[str, object]],
+        *,
+        structure_prior_enabled: bool,
     ) -> Dict[int, float]:
         bm25_map = {idx: score for idx, score in bm25_scores}
         vector_map = {idx: score for idx, score in vector_scores}
@@ -55,7 +70,7 @@ class RetrieverService:
             sparse = bm25_norm.get(idx, 0.0)
             dense = vector_norm.get(idx, 0.0)
             path = str(corpus[idx].get("path", ""))
-            structure = _structure_prior(query_tokens, path)
+            structure = _structure_prior(query_tokens, path) if structure_prior_enabled else 0.0
             combined[idx] = (
                 weights.sparse_weight * sparse
                 + weights.dense_weight * dense

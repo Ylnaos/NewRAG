@@ -18,8 +18,10 @@ class IndexStore:
 
     def load_meta(self) -> Dict[str, object]:
         if not self._meta_path.exists():
-            return {"current": None, "history": []}
+            return {"current": None, "history": [], "freshness": "MISSING"}
         payload = json.loads(self._meta_path.read_text(encoding="utf-8"))
+        if "freshness" not in payload:
+            payload["freshness"] = "READY" if payload.get("current") else "MISSING"
         return payload
 
     def save_meta(self, payload: Dict[str, object]) -> None:
@@ -52,11 +54,29 @@ class IndexStore:
         history.append(meta.to_dict())
         payload["history"] = history
         payload["current"] = meta.to_dict()
+        payload["freshness"] = "READY"
         self.save_meta(payload)
 
     def save_building(self, meta: IndexMeta) -> None:
         payload = self.load_meta()
         payload["current"] = meta.to_dict()
+        self.save_meta(payload)
+
+    def get_freshness(self) -> str:
+        payload = self.load_meta()
+        freshness = str(payload.get("freshness") or "").upper()
+        if freshness in {"READY", "STALE", "MISSING"}:
+            return freshness
+        return "READY" if payload.get("current") else "MISSING"
+
+    def mark_stale(self) -> None:
+        payload = self.load_meta()
+        payload["freshness"] = "STALE" if payload.get("current") else "MISSING"
+        self.save_meta(payload)
+
+    def mark_missing(self) -> None:
+        payload = self.load_meta()
+        payload["freshness"] = "MISSING"
         self.save_meta(payload)
 
     def load_index_meta(self, version: Optional[int] = None) -> Optional[IndexMeta]:

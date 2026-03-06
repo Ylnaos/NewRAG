@@ -1,5 +1,3 @@
-﻿import os
-
 from fastapi.testclient import TestClient
 
 from app.main import create_app
@@ -25,6 +23,22 @@ def test_upload_txt_and_tree(tmp_path, monkeypatch) -> None:
     tree_payload = tree_response.json()
     assert tree_payload["doc_id"] == doc_id
     assert tree_payload["tree"]
+
+
+def test_async_upload_returns_queued(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    app = create_app()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/documents/upload",
+        data={"async_process": "true"},
+        files={"file": ("sample.txt", b"1 Intro\nQueued text.", "text/plain")},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "QUEUED"
+    assert payload["task_id"]
 
 
 def test_upload_rejects_unknown_extension(tmp_path, monkeypatch) -> None:

@@ -1,13 +1,13 @@
-﻿/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import i18n from '../i18n/config';
 import {
   BackendDocument,
   DocumentDetailResponse,
   DocumentTreeNodePayload,
+  IndexBuildResponse,
   archiveDocument as archiveDocumentApi,
   buildIndex,
-  IndexBuildResponse,
   deleteDocument as deleteDocumentApi,
   isApiError,
   listDocuments,
@@ -19,6 +19,7 @@ type DocumentType = 'pdf' | 'docx' | 'md' | 'txt' | 'image';
 
 export type DocumentStatus =
   | 'RAW'
+  | 'QUEUED'
   | 'PARSED'
   | 'CHUNKED'
   | 'EMBEDDED'
@@ -88,11 +89,15 @@ interface DocumentsContextType {
   documents: DocumentItem[];
   cacheAgeMs: number;
   cacheStale: boolean;
-  addFiles: (files: File[]) => void;
+  documentsError: string;
+  errorMessage: string;
+  clearDocumentsError: () => void;
+  refreshDocuments: () => Promise<void>;
+  addFiles: (files: File[]) => Promise<void>;
   updateDocument: (id: string, updater: (doc: DocumentItem) => DocumentItem) => void;
-  deleteDocument: (id: string) => void;
-  archiveDocument: (id: string, archivePath?: string) => void;
-  restoreDocument: (id: string) => void;
+  deleteDocument: (id: string) => Promise<void>;
+  archiveDocument: (id: string, archivePath?: string) => Promise<void>;
+  restoreDocument: (id: string) => Promise<void>;
   triggerIndexBuild: () => Promise<IndexBuildResponse>;
   getDocumentById: (id: string) => DocumentItem | undefined;
 }
@@ -105,6 +110,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 
 const STATUS_SET = new Set<DocumentStatus>([
   'RAW',
+  'QUEUED',
   'PARSED',
   'CHUNKED',
   'EMBEDDED',
@@ -284,8 +290,17 @@ const loadDocuments = (): { documents: DocumentItem[]; cacheTs: number } => {
   }
 };
 
+const getErrorMessage = (error: unknown) => {
+  if (isApiError(error)) return error.message;
+  if (error instanceof Error) return error.message;
+  return i18n.t('common.requestFailed');
+};
+
 export const DocumentsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [{ documents, cacheTs }, setState] = useState(loadDocuments);
+  const [documentsError, setDocumentsError] = useState('');
+
+  const clearDocumentsError = useCallback(() => setDocumentsError(''), []);
 
   const refreshDocuments = useCallback(async () => {
     try {
@@ -295,8 +310,10 @@ export const DocumentsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         documents: mergeDocuments(nextDocs, prev.documents),
         cacheTs: Date.now(),
       }));
+      setDocumentsError('');
     } catch (error) {
-      console.error('Failed to fetch documents', error);
+      setDocumentsError(getErrorMessage(error));
+      throw error;
     }
   }, []);
 
@@ -306,16 +323,7 @@ export const DocumentsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [documents, cacheTs]);
 
   useEffect(() => {
-    let active = true;
-    const load = async () => {
-      await refreshDocuments();
-    };
-    if (active) {
-      void load();
-    }
-    return () => {
-      active = false;
-    };
+    void refreshDocuments().catch(() => {});
   }, [refreshDocuments]);
 
   const cacheAgeMs = Date.now() - cacheTs;
@@ -328,85 +336,93 @@ export const DocumentsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   }, []);
 
-  const addFiles = useCallback((files: File[]) => {
+  const addFiles = useCallback(async (files: File[]) => {
     if (!files.length) return;
-    void (async () => {
+    setDocumentsError('');
+    try {
       for (const file of files) {
-        try {
-          const response = await uploadDocument(file, { title: file.name, source: file.name, asyncProcess: false });
-          if ('document' in response) {
-            setState((prev) => ({
-              documents: mergeDocuments([mapBackendDocument(response.document, response)], prev.documents),
-              cacheTs: Date.now(),
-            }));
-          }
-        } catch (error) {
-          console.error('Failed to upload document', error);
+        const response = await uploadDocument(file, { title: file.name, source: file.name, asyncProcess: false });
+        if ('document' in response) {
+          setState((prev) => ({
+            documents: mergeDocuments([mapBackendDocument(response.document, response)], prev.documents),
+            cacheTs: Date.now(),
+          }));
         }
       }
       await refreshDocuments();
-    })();
+    } catch (error) {
+      setDocumentsError(getErrorMessage(error));
+      throw error;
+    }
   }, [refreshDocuments]);
 
-  const deleteDocument = useCallback((id: string) => {
-    void (async () => {
-      try {
-        await deleteDocumentApi(id);
-        setState((prev) => ({
-          documents: prev.documents.filter((doc) => doc.id !== id),
-          cacheTs: Date.now(),
-        }));
-      } catch (error) {
-        console.error('Failed to delete document', error);
-      }
-    })();
+  const deleteDocument = useCallback(async (id: string) => {
+    setDocumentsError('');
+    try {
+      await deleteDocumentApi(id);
+      setState((prev) => ({
+        documents: prev.documents.filter((doc) => doc.id !== id),
+        cacheTs: Date.now(),
+      }));
+    } catch (error) {
+      setDocumentsError(getErrorMessage(error));
+      throw error;
+    }
   }, []);
 
-  const archiveDocument = useCallback((id: string, archivePath?: string) => {
-    void (async () => {
-      try {
-        const response = await archiveDocumentApi(id, archivePath);
-        setState((prev) => ({
-          documents: mergeDocumentUpdate(prev.documents, response.document),
-          cacheTs: Date.now(),
-        }));
-      } catch (error) {
-        console.error('Failed to archive document', error);
-        // Don't fake a successful archive when the backend call fails.
-        if (isApiError(error)) return;
-      }
-    })();
+  const archiveDocument = useCallback(async (id: string, archivePath?: string) => {
+    setDocumentsError('');
+    try {
+      const response = await archiveDocumentApi(id, archivePath);
+      setState((prev) => ({
+        documents: mergeDocumentUpdate(prev.documents, response.document),
+        cacheTs: Date.now(),
+      }));
+    } catch (error) {
+      setDocumentsError(getErrorMessage(error));
+      throw error;
+    }
   }, []);
 
-  const restoreDocument = useCallback((id: string) => {
-    void (async () => {
-      try {
-        const response = await restoreDocumentApi(id);
-        setState((prev) => ({
-          documents: mergeDocumentUpdate(prev.documents, response.document),
-          cacheTs: Date.now(),
-        }));
-      } catch (error) {
-        console.error('Failed to restore document', error);
-      }
-    })();
+  const restoreDocument = useCallback(async (id: string) => {
+    setDocumentsError('');
+    try {
+      const response = await restoreDocumentApi(id);
+      setState((prev) => ({
+        documents: mergeDocumentUpdate(prev.documents, response.document),
+        cacheTs: Date.now(),
+      }));
+    } catch (error) {
+      setDocumentsError(getErrorMessage(error));
+      throw error;
+    }
   }, []);
 
   const triggerIndexBuild = useCallback(async () => {
-    const response = await buildIndex(false);
-    await refreshDocuments();
-    return response;
+    setDocumentsError('');
+    try {
+      const response = await buildIndex(false);
+      await refreshDocuments();
+      return response;
+    } catch (error) {
+      setDocumentsError(getErrorMessage(error));
+      throw error;
+    }
   }, [refreshDocuments]);
 
   const getDocumentById = useCallback(
     (id: string) => documents.find((doc) => doc.id === id),
-    [documents]
+    [documents],
   );
 
   const value = useMemo(() => ({
     documents,
     cacheAgeMs,
     cacheStale,
+    documentsError,
+    errorMessage: documentsError,
+    clearDocumentsError,
+    refreshDocuments,
     addFiles,
     updateDocument,
     deleteDocument,
@@ -414,7 +430,21 @@ export const DocumentsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     restoreDocument,
     triggerIndexBuild,
     getDocumentById,
-  }), [documents, cacheAgeMs, cacheStale, addFiles, updateDocument, deleteDocument, archiveDocument, restoreDocument, triggerIndexBuild, getDocumentById]);
+  }), [
+    documents,
+    cacheAgeMs,
+    cacheStale,
+    documentsError,
+    clearDocumentsError,
+    refreshDocuments,
+    addFiles,
+    updateDocument,
+    deleteDocument,
+    archiveDocument,
+    restoreDocument,
+    triggerIndexBuild,
+    getDocumentById,
+  ]);
 
   return (
     <DocumentsContext.Provider value={value}>
@@ -462,4 +492,3 @@ export const applyDocumentTree = (doc: DocumentItem, treePayload: DocumentTreeNo
     graph,
   };
 };
-

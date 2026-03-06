@@ -1,4 +1,4 @@
-import i18n from 'i18next';
+﻿import i18n from 'i18next';
 
 export class ApiError extends Error {
   status: number;
@@ -116,20 +116,6 @@ export interface IndexHistoryResponse {
   history: IndexMeta[];
 }
 
-export interface QAResponse {
-  answer_id?: string;
-  answer?: string;
-  reasoning_content?: string;
-  thought_steps?: string[];
-  evidence?: BackendEvidence[];
-  citations?: Array<{ chunk_id?: string; doc_id?: string; path?: string; score?: number }>;
-  graph?: BackendGraph;
-  verify_status?: string;
-  verify_detail?: { status?: string; overlap?: number };
-  fallback_reason?: string;
-  coarse_sections?: BackendCoarseSection[];
-}
-
 export interface QAHistoryTurn {
   role: 'user' | 'assistant';
   content: string;
@@ -137,6 +123,7 @@ export interface QAHistoryTurn {
 
 export interface BackendEvidence {
   chunk_id?: string;
+  id?: string;
   doc_id?: string;
   section_id?: string;
   path?: string;
@@ -144,6 +131,7 @@ export interface BackendEvidence {
   snippet?: string;
   order?: number;
   score?: number;
+  source_rank?: number;
   redundant_flag?: boolean;
   conflict_flag?: boolean;
   confidence?: number;
@@ -178,6 +166,21 @@ export interface BackendCoarseSection {
   chunk_id?: string;
 }
 
+export interface QAResponse {
+  answer_id?: string;
+  answer?: string;
+  reasoning_content?: string;
+  thought_steps?: string[];
+  evidence?: BackendEvidence[];
+  citations?: Array<{ chunk_id?: string; doc_id?: string; path?: string; score?: number }>;
+  graph?: BackendGraph;
+  verify_status?: string;
+  verify_detail?: { status?: string; overlap?: number };
+  fallback_reason?: string;
+  result_mode?: 'llm' | 'fallback_evidence' | 'memory';
+  coarse_sections?: BackendCoarseSection[];
+}
+
 export interface FeedbackResponse {
   feedback: Record<string, unknown>;
 }
@@ -194,6 +197,7 @@ export interface ReadyResponse {
   errors?: string[];
   version?: string;
   index_status?: IndexMeta | null;
+  index_freshness?: 'READY' | 'STALE' | 'MISSING';
 }
 
 export interface LLMConfig {
@@ -317,6 +321,21 @@ export interface EvalReportListResponse {
   reports: EvalReportListEntry[];
 }
 
+export interface AnswerRecordResponse {
+  answer_id: string;
+  query: string;
+  answer: string;
+  evidence?: BackendEvidence[];
+  graph?: BackendGraph;
+  thought_steps?: string[];
+  reasoning_content?: string | null;
+  created_at?: string;
+}
+
+export interface AnswerListResponse {
+  answers: AnswerRecordResponse[];
+}
+
 export interface AnswerGraphResponse {
   answer_id: string;
   graph: BackendGraph;
@@ -383,6 +402,7 @@ export const queryQA = (payload: {
   rerank_k?: number;
   max_evidence?: number;
   history?: QAHistoryTurn[];
+  structure_prior_enabled?: boolean;
 }) =>
   requestJson<QAResponse>('/api/qa/query', {
     method: 'POST',
@@ -390,6 +410,7 @@ export const queryQA = (payload: {
   });
 
 export const submitFeedback = (payload: {
+  answer_id: string;
   node_id: string;
   score: number;
   comment?: string;
@@ -443,6 +464,11 @@ export const getEvaluationReport = (reportId: string) =>
 
 export const listEvaluationReports = () =>
   requestJson<EvalReportListResponse>('/api/eval/reports');
+
+export const listAnswers = () => requestJson<AnswerListResponse>('/api/answers');
+
+export const getAnswer = (answerId: string) =>
+  requestJson<AnswerRecordResponse>(`/api/answers/${answerId}`);
 
 export const getAnswerGraph = (answerId: string) =>
   requestJson<AnswerGraphResponse>(`/api/answers/${answerId}/graph`);

@@ -82,17 +82,18 @@ const SystemStatus: React.FC = () => {
     };
 
     const indexReady = index.data?.index?.status === 'READY';
+    const indexFresh = ready.data?.index_freshness === 'READY';
     const indexStatus: ServiceStatus = {
       nameKey: 'system.services.index',
       endpoint: '/api/index/status',
-      status: index.error ? 'down' : (indexReady ? 'healthy' : 'degraded'),
+      status: index.error ? 'down' : (indexReady && indexFresh ? 'healthy' : 'degraded'),
       latency: index.latency,
     };
 
     const qaStatus: ServiceStatus = {
       nameKey: 'system.services.qa',
       endpoint: '/api/qa/query',
-      status: health.error || ready.error || index.error ? 'down' : (indexReady ? 'healthy' : 'degraded'),
+      status: health.error || ready.error || index.error ? 'down' : (indexReady && indexFresh ? 'healthy' : 'degraded'),
       latency: Math.round((ready.latency + index.latency) / 2),
     };
 

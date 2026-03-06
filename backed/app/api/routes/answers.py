@@ -5,6 +5,13 @@ from fastapi import APIRouter, HTTPException, Request
 router = APIRouter(prefix="/api/answers", tags=["answers"])
 
 
+@router.get("")
+async def list_answers(request: Request) -> dict:
+    store = request.app.state.answer_store
+    records = store.list()
+    return {"answers": [record.to_dict() for record in records]}
+
+
 @router.get("/{answer_id}")
 async def get_answer(answer_id: str, request: Request) -> dict:
     store = request.app.state.answer_store

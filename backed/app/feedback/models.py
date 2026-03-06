@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -13,6 +13,7 @@ def _utcnow() -> datetime:
 @dataclass
 class Feedback:
     feedback_id: str
+    answer_id: str
     node_id: str
     score: int
     comment: str
@@ -25,6 +26,7 @@ class Feedback:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "feedback_id": self.feedback_id,
+            "answer_id": self.answer_id,
             "node_id": self.node_id,
             "score": self.score,
             "comment": self.comment,
@@ -38,6 +40,7 @@ class Feedback:
     @classmethod
     def create(
         cls,
+        answer_id: str,
         node_id: str,
         score: int,
         comment: Optional[str] = None,
@@ -48,6 +51,7 @@ class Feedback:
     ) -> "Feedback":
         return cls(
             feedback_id=str(uuid.uuid4()),
+            answer_id=answer_id,
             node_id=node_id,
             score=score,
             comment=comment or "",

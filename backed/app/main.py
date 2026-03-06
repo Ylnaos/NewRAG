@@ -1,5 +1,6 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import logging
 from pathlib import Path
@@ -40,8 +41,21 @@ from app.verify.service import AnswerVerifier
 def create_app() -> FastAPI:
     settings = Settings.from_env()
     setup_logging(settings)
+    logger = logging.getLogger("startup")
 
-    app = FastAPI(title=settings.app_name, version=settings.app_version)        
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        errors = settings.validate()
+        if errors:
+            logger.error("config_invalid", extra={"errors": errors})
+        else:
+            logger.info(
+                "service_started",
+                extra={"version": settings.app_version, "env": settings.env},
+            )
+        yield
+
+    app = FastAPI(title=settings.app_name, version=settings.app_version, lifespan=lifespan)
     origins = [item.strip() for item in settings.cors_allow_origins.split(",") if item.strip()]
     if not origins:
         origins = ["http://127.0.0.1:5173", "http://localhost:5173"]
@@ -91,17 +105,18 @@ def create_app() -> FastAPI:
         llm_client=app.state.llm_client,
         verifier=app.state.answer_verifier,
     )
+    answer_store = AnswerStore(str(data_dir))
+    app.state.answer_store = answer_store
     app.state.feedback_service = FeedbackService(
         store=FeedbackStore(str(data_dir)),
+        answer_store=answer_store,
     )
     app.state.model_weights_store = weights_store
     llm_config_store = LLMConfigStore(str(data_dir))
     app.state.llm_config_store = llm_config_store
     app.state.eval_store = EvalStore(str(data_dir))
-    app.state.answer_store = AnswerStore(str(data_dir))
     app.state.started_at = datetime.now(timezone.utc)
 
-    # Only override env/default LLM settings when an explicit persisted config exists.
     if llm_config_store.is_configured():
         llm_config = llm_config_store.load()
         if llm_config.base_url:
@@ -114,7 +129,6 @@ def create_app() -> FastAPI:
         app.state.llm_client.enable_thinking = llm_config.enable_thinking
 
     if not app.state.llm_client.api_key:
-        # Allow local/dev deployments to keep API keys out of tracked config files.
         app.state.llm_client.api_key = llm_config_store.load_api_key()
 
     app.add_middleware(RequestIdMiddleware, settings=settings)
@@ -127,19 +141,6 @@ def create_app() -> FastAPI:
     app.include_router(llm_router)
     app.include_router(eval_router)
     app.include_router(answers_router)
-
-    logger = logging.getLogger("startup")
-
-    @app.on_event("startup")
-    async def on_startup() -> None:
-        errors = settings.validate()
-        if errors:
-            logger.error("config_invalid", extra={"errors": errors})
-        else:
-            logger.info(
-                "service_started",
-                extra={"version": settings.app_version, "env": settings.env},
-            )
 
     return app
 
