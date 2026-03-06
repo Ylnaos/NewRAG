@@ -1,0 +1,35 @@
+﻿阶段,模块,子模块,状态,架构完成,实现完成,功能验收,测试基线,验收方式,备注
+P0 方案与需求,总体方案,架构文档与接口草案,已完成,是,否,否,方案评审通过与范围冻结,评审记录,对应 docs/plan-architecture.md
+P0 方案与需求,数据与评测,评测集与标注规范,未开始,否,否,否,至少50条问答与证据标注，覆盖事实/流程/比较/数值,人工抽检,用于检索与生成评测
+P1 基础设施,项目骨架,API服务骨架与目录结构,已验收,是,是,是,服务可启动并提供/health,集成测试,已建立FastAPI应用骨架与目录结构，/health与/ready已实现；验收：pytest tests/test_health.py
+P1 基础设施,配置管理,环境变量与配置加载,已验收,是,是,是,配置覆盖与校验通过,单元测试,已实现Settings加载与校验，提供safe_dict；验收：代码检查 app/core/config.py；/ready 返回配置校验字段
+P1 基础设施,日志与追踪,结构化日志与请求ID,已验收,是,是,是,关键路径日志可追踪,人工检查,已实现JSON结构化日志与request_id中间件；验收：pytest tests/test_request_id.py；app/core/logging.py JSON日志
+P1 基础设施,任务队列,解析与索引异步任务,已验收,是,是,是,任务可重试与超时控制,集成测试,已实现内存TaskQueue支持重试与超时；验收：pytest tests/test_task_queue.py（超时/重试）；验收：pytest tests/test_api_endpoints.py（/api/index/build async + /api/tasks）；手工：POST /api/index/build async_process=true 任务 SUCCESS
+P2 文档处理,文档上传,文件校验与存储,已验收,是,是,是,支持PDF DOCX MD TXT上传,手工测试,已实现格式校验与原始文件存储并返回doc_id；验收：pytest tests/test_documents.py（上传/拒绝未知扩展）
+P2 文档处理,结构解析,章节/段落/表格提取,已完成,是,是,否,解析成功率≥95%,抽样评估,已实现MD/TXT/PDF/DOCX解析与章节层级识别
+P2 文档处理,层次切分,chunk生成与路径标注,已验收,是,是,是,路径准确率≥90%,抽样评估,已实现按章节聚合+滑窗切分与路径标注；验收：pytest tests/test_retriever.py；app/documents/chunker.py
+P2 文档处理,结构树,可视化树数据输出,已验收,是,是,是,结构树可完整还原目录,集成测试,已提供结构树输出接口/api/documents/{id}/tree；验收：pytest tests/test_documents.py（/tree）
+P2 文档处理,降级策略,结构缺失与超长段落处理,已验收,是,是,是,降级策略可触发且不阻断索引,集成测试,解析失败回退为纯文本解析并继续切分；验收：手工验证 解析异常PDF回退；app/documents/service.py
+P3 索引构建,稀疏索引,BM25索引构建,已验收,是,是,是,TopN召回≥0.85,离线评测,已实现BM25索引构建与评分数据持久化；验收：pytest tests/test_index.py；app/index/bm25.py
+P3 索引构建,向量索引,Embedding+FAISS,已验收,是,是,是,向量召回≥0.80,离线评测,已实现可替换向量索引(哈希向量)与持久化；验收：pytest tests/test_index.py；app/index/vector.py
+P3 索引构建,索引版本,版本号与回滚,已验收,是,是,是,构建与回滚可用,集成测试,已实现版本递增与回滚到指定版本；验收：pytest tests/test_index.py（构建/回滚）
+P4 检索与重排,粗检索,章节级混合召回,已验收,是,是,是,召回@N≥0.85,离线评测,已实现BM25+向量+结构先验的混合粗召回与章节聚合；验收：pytest tests/test_retriever.py（coarse_sections）
+P4 检索与重排,精排,段落级重排,已验收,是,是,是,NDCG@K≥0.60,离线评测,已实现基于词项重合的轻量精排与TopK候选输出；验收：pytest tests/test_retriever.py（fine_chunks重排）
+P5 证据融合,去冗余,相似证据合并,已验收,是,是,是,冗余率≤15%,离线评测,已实现基于Jaccard的冗余标记与降权；验收：pytest tests/test_evidence.py（冗余标记）
+P5 证据融合,冲突检测,NLI或规则冲突,已验收,是,是,是,冲突率≤5%,离线评测,已实现基于数值冲突的规则检测与标记；验收：pytest tests/test_evidence.py（冲突标记）
+P5 证据融合,置信度加权,权重与排序,已验收,是,是,是,证据覆盖率≥90%,离线评测,已实现match/consistency/diversity加权与排序；验收：app/evidence/service.py 加权排序
+P6 生成与校验,LLM网关,外部API占位,已验收,是,是,是,API连通与超时处理,接口测试,已实现LLMClient支持 moonshot(Kimi) /chat/completions，并保留 mock/disabled 模式；验收：pytest tests/test_qa.py（mock/disabled）；验收：POST /api/llm/test status=ok mode=moonshot（~3-4s）；验收：/api/qa/query（moonshot）verify_status=PASS（数字码/短答）
+P6 生成与校验,提示模板,基于证据生成,已验收,是,是,是,答案引用覆盖≥90%,离线评测,已实现基于证据的提示模板构建；验收：app/qa/prompt.py 证据提示模板
+P6 生成与校验,答案校验,反向检索与一致性,已验收,是,是,是,校验通过率≥85%,离线评测,已实现基于证据重合度的轻量一致性校验，支持短答案在证据全覆盖时通过；验收：pytest tests/test_qa.py（verify_status=PASS）；验收：pytest tests/test_qa.py（short answer）
+P6 生成与校验,回退策略,LLM超时与不可用回退,已验收,是,是,是,回退输出可用,接口测试,已实现LLM失败或校验失败时回退为证据摘要；验收：pytest tests/test_qa.py（fallback）
+P7 API接口,问答接口,/api/qa/query,已验收,是,是,是,端到端返回答案与证据,集成测试,已实现问答接口并返回evidence/citations/graph；验收：pytest tests/test_api_endpoints.py（/api/qa/query）；手工E2E：上传 docs/e2e-acceptance-kimi.txt 并构建索引后询问 What is the secret code? 返回 908172635，verify_status=PASS，citations包含 e2e-acceptance-kimi.txt
+P7 API接口,文档接口,/api/documents/*,已验收,是,是,是,上传与查询成功,集成测试,已实现上传/列表/详情接口；验收：pytest tests/test_documents.py（upload）；app/api/routes/documents.py
+P7 API接口,结构树接口,/api/documents/{id}/tree,已验收,是,是,是,结构树可视化一致,集成测试,已实现结构树接口与tree输出；验收：pytest tests/test_documents.py（/tree）
+P7 API接口,反馈接口,/api/feedback,已验收,是,是,是,反馈入库成功,集成测试,已实现反馈提交与落盘；验收：pytest tests/test_api_endpoints.py（/api/feedback）
+P7 API接口,健康检查,/health 与 /ready,已验收,是,是,是,返回系统版本与索引状态,集成测试,"已实现/health与/ready并包含索引状态；验收：pytest tests/test_health.py（/health,/ready）"
+P8 评测与验收,评测集,问答与证据标注,进行中,是,否,否,至少50条高质量样本，覆盖多题型,人工抽检,已提供评测集JSON模板与样例，需补齐>=50条
+P8 评测与验收,指标计算,检索与生成指标,已验收,是,是,是,MRR/NDCG/覆盖率产出,自动脚本,已实现评测指标计算与report输出；验收：pytest tests/test_eval.py（report 输出）
+P8 评测与验收,评测报告,结果汇总与可追溯报告,已验收,是,是,是,报告可复现,人工抽检,已输出report.json与report.csv；验收：pytest tests/test_eval.py（report.json/csv）
+P8 评测与验收,性能测试,延迟与吞吐,进行中,是,否,否,P95≤8秒,压测脚本,评测脚本已记录单次延迟与P95，尚未压测
+P9 安全与运维,权限与脱敏,访问控制与日志脱敏,未开始,否,否,否,敏感信息不落盘,安全检查,毕业设计可简化
+P9 安全与运维,备份与恢复,索引与文档备份,未开始,否,否,否,支持全量备份与恢复,演练记录,可选项

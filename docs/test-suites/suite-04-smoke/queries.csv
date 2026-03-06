@@ -1,0 +1,5 @@
+suite,query,expected_evidence_contains,notes
+suite-04,"What is the launch code?","Launch code: ORANGE-UNICORN-42","Core smoke fact."
+suite-04,"What is the project codename?","Project codename: Sparrow-E2E-20260305","Codename retrieval."
+suite-04,"SEV-1 should be acknowledged within how many minutes?","acknowledge SEV-1 within 15 minutes","Numeric SLA retrieval."
+suite-04,"项目代号是什么？","Sparrow-E2E-20260305","Chinese query against English evidence."

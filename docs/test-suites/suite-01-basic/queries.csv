@@ -1,0 +1,5 @@
+suite,query,expected_evidence_contains,notes
+suite-01,"What is the codename?","Codename: Sparrow","Basic retrieval of a single fact."
+suite-01,"What is the calibration constant?","Calibration constant: 3.14","Numeric fact should be returned."
+suite-01,"What is BASIC-UUID?","11111111-2222-3333-4444-555555555555","Unique marker retrieval."
+suite-01,"测试文档的代号是什么？","Codename: Sparrow","Chinese query against English content."

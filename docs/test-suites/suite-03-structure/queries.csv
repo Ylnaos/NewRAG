@@ -1,0 +1,5 @@
+suite,query,expected_evidence_contains,notes
+suite-03,"What is the minimum password length?","Minimum length: 12 characters","Should land in section 1.2."
+suite-03,"What is the password rotation period?","Rotation: 90 days","Should land in section 1.2."
+suite-03,"日志保留多少天？","日志保留 30 天","Chinese query should match Chinese section 3.1."
+suite-03,"删除前需要什么？","二次确认","Chinese query should match section 3.2."

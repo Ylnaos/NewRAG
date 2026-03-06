@@ -1,0 +1,32 @@
+# IDE / agent
+.ace-tool/
+.claude/
+.vscode/
+.idea/
+
+# OS / temp
+.DS_Store
+Thumbs.db
+tmp.patch
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+coverage/
+
+# Backend runtime data
+backed/data/
+backed/data_runtime/
+backed/data_e2e_*/
+backed/.pytest_cache/
+
+# Secrets
+backed/data/llm/api_key.txt

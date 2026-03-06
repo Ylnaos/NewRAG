@@ -1,0 +1,2 @@
+Smoke test document for upload.
+Contains short text for indexing.

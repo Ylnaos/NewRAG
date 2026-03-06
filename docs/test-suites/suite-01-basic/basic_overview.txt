@@ -1,0 +1,18 @@
+NewRAG Test Suite 01 - Basic Facts
+
+ID: SUITE01-BASIC
+Purpose: deterministic single-document retrieval + QA.
+
+FACTS
+1) Codename: Sparrow
+2) Calibration constant: 3.14
+3) Support ticket prefix: RAG-TEST-001
+
+UNIQUE MARKERS
+- BASIC-UNIQUE-PHRASE: orange-mango-lantern
+- BASIC-UUID: 11111111-2222-3333-4444-555555555555
+
+EXPECTED BEHAVIOR
+- Asking for the codename should cite: "Codename: Sparrow"
+- Asking for the calibration constant should cite: "Calibration constant: 3.14"
+- Asking for BASIC-UUID should cite the UUID line verbatim

@@ -1,0 +1,11 @@
+E2E Acceptance Document (Kimi)
+
+Timestamp: 2026-01-22T14:33:28+08:00
+E2E-UNIQUE-PHRASE: orange-mango-lantern-20260122-1433
+
+Facts:
+- Project codename: Sparrow-E2E-20260122
+- Secret code: 908172635
+- If asked "What is the secret code?", the correct answer is 908172635.
+- If asked "What is the project codename?", the correct answer is Sparrow-E2E-20260122.
+

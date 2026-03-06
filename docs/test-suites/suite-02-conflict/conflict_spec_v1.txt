@@ -1,0 +1,13 @@
+NewRAG Test Suite 02 - Conflict Specs (v1)
+
+ID: SUITE02-CONFLICT
+Product: ACME Thermometer T-100
+
+SPEC (Version 1)
+- Measurement range is 0 to 100 Celsius.
+- Sampling rate is 5 Hz.
+
+WARRANTY
+- Warranty period is 24 months.
+
+Unique marker: CONFLICT-UNIQUE-PHRASE: cobalt-sky-needle

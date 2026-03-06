@@ -1,0 +1,653 @@
+﻿{
+  "app": {
+    "title": "NewRAG System",
+    "loading": "Loading..."
+  },
+  "nav": {
+    "home": "Home",
+    "chat": "Chat",
+    "qa": "Q&A",
+    "docs": "Documents",
+    "index": "Index",
+    "graph": "Evidence Graph",
+    "chains": "Thought Chains",
+    "eval": "Evaluation",
+    "status": "System Status",
+    "settings": "Settings"
+  },
+  "theme": {
+    "toggle": "Toggle Theme"
+  },
+  "lang": {
+    "toggle": "Switch Language"
+  },
+  "common": {
+    "back": "Back",
+    "ok": "OK",
+    "none": "None",
+    "empty": "—",
+    "unknown": "Unknown",
+    "unknownDocument": "Unknown Document",
+    "page": "Page {{page}}",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "requestFailed": "Request failed"
+  },
+  "status": {
+    "pending": "Pending",
+    "active": "Active",
+    "done": "Done",
+    "idle": "Idle",
+    "running": "Running",
+    "queued": "Queued",
+    "success": "Success",
+    "warning": "Warning",
+    "healthy": "Healthy",
+    "degraded": "Degraded",
+    "down": "Down"
+  },
+  "sidebar": {
+    "recent": "Recent",
+    "empty": "No recent chats.",
+    "archive": "Archive",
+    "archiveFolder": "Archive Folder",
+    "archiveSearch": "Search archived chats",
+    "archiveEmpty": "No archived chats.",
+    "archiveEmptySearch": "No archived chats matched.",
+    "delete": "Delete",
+    "restore": "Restore",
+    "collapseRecent": "Collapse recent chats",
+    "expandRecent": "Expand recent chats",
+    "collapseArchive": "Collapse archive folder",
+    "expandArchive": "Expand archive folder",
+    "confirm": {
+      "archiveTitle": "Archive session",
+      "archiveMessage": "Archive this session? It will be hidden from recent chats.",
+      "deleteTitle": "Delete session",
+      "deleteMessage": "Delete this session? This cannot be undone."
+    }
+  },
+  "topbar": {
+    "subtitle": "Workspace status snapshot and navigation context.",
+    "indexReady": "Index Ready",
+    "indexBuilding": "Index Building",
+    "cacheFresh": "Fresh",
+    "cacheStale": "Stale",
+    "cache": "Cache {{state}} · {{minutes}}m",
+    "docsReady": "Docs Ready {{ready}}/{{total}}"
+  },
+  "chat": {
+    "new": "New Chat",
+    "placeholder": "Ask anything...",
+    "emptyTitle": "How can I help you today?",
+    "assistantLabel": "Assistant",
+    "userAlt": "User",
+    "aiAlt": "AI",
+    "evidenceGraph": "Evidence Graph",
+    "viewEvidenceGraph": "View Evidence Graph",
+    "viewConversationGraph": "View Conversation Graph",
+    "thought": {
+      "show": "Show thought process",
+      "hide": "Hide thought process",
+      "thinking": "Thinking",
+      "done": "Thought"
+    },
+    "listening": "Listening...",
+    "uploadFile": "Upload File",
+    "voiceInput": "Voice Input",
+    "modelLabel": "Model:",
+    "thinkingToggle": "Thinking",
+    "tuningToggle": "Tuning",
+    "error": {
+      "noQuestion": "Please enter a question before sending attachments.",
+      "noAnswer": "No answer returned.",
+      "queryFailed": "Query failed."
+    },
+    "reason": {
+      "retrievedEvidence": "Retrieved evidence node"
+    },
+    "thoughtSteps": {
+      "parse": "Parsing the request and extracting intent",
+      "reviewAttachments": "Reviewing {{count}} attachments",
+      "checkContext": "Checking relevant context",
+      "draft": "Drafting the response",
+      "summarize": "Summarizing long-form input for clarity"
+    }
+  },
+  "documents": {
+    "title": "Document Management",
+    "cacheFresh": "fresh",
+    "cacheStale": "stale",
+    "cache": "Cache {{state}} · {{minutes}} minutes",
+    "drop": "Drop files to upload",
+    "supports": "Supports PDF, DOCX, MD, TXT",
+    "selectFiles": "Select Files",
+    "searchPlaceholder": "Search documents",
+    "statusAll": "All Status",
+    "sectionTitle": "Documents",
+    "pages": "{{count}} pages",
+    "restore": "Restore",
+    "archive": "Archive",
+    "archiveEdit": "Edit archive folder",
+    "archivePathLabel": "Archive folder (optional)",
+    "archivePathPlaceholder": "e.g. Projects/Phase A",
+    "archivePathHint": "Use / to separate subfolders.",
+    "archivePathDisplay": "Archive folder: {{path}}",
+    "archiveEditTitle": "Edit archive folder",
+    "archiveEditMessage": "Update the archive folder for this document.",
+    "archiveEditConfirm": "Update folder",
+    "delete": "Delete",
+    "empty": "No documents match the current filters.",
+    "untitled": "Untitled Document",
+    "confirm": {
+      "deleteTitle": "Delete Document",
+      "deleteMessage": "This will remove the document metadata from the workspace.",
+      "archiveTitle": "Archive Document",
+      "archiveMessage": "Archived documents will be excluded from indexing.",
+      "restoreTitle": "Restore Document",
+      "restoreMessage": "Restored documents will be available for indexing again."
+    },
+    "status": {
+      "raw": "RAW",
+      "parsed": "PARSED",
+      "chunked": "CHUNKED",
+      "embedded": "EMBEDDED",
+      "indexed": "INDEXED",
+      "ready": "READY",
+      "error": "ERROR",
+      "archived": "ARCHIVED"
+    },
+    "seed": {
+      "overviewTitle": "{{name}} Overview",
+      "overviewPath": "{{name}} / Overview",
+      "scopeTitle": "Scope & Goals",
+      "scopePath": "{{name}} / 1 Scope & Goals",
+      "scopeReqTitle": "Key Requirements",
+      "scopeReqPath": "{{name}} / 1.1 Key Requirements",
+      "scopeRiskTitle": "Risk Notes",
+      "scopeRiskPath": "{{name}} / 1.2 Risk Notes",
+      "pipelineTitle": "Pipeline Flow",
+      "pipelinePath": "{{name}} / 2 Pipeline Flow",
+      "pipelineStageTitle": "Stage Mapping",
+      "pipelineStagePath": "{{name}} / 2.1 Stage Mapping",
+      "pipelineCacheTitle": "Cache Strategy",
+      "pipelineCachePath": "{{name}} / 2.2 Cache Strategy",
+      "evidenceTitle": "Evidence Policy",
+      "evidencePath": "{{name}} / 3 Evidence Policy",
+      "evidenceScoreTitle": "Scoring Rules",
+      "evidenceScorePath": "{{name}} / 3.1 Scoring Rules",
+      "evidenceConflictTitle": "Conflict Handling",
+      "evidenceConflictPath": "{{name}} / 3.2 Conflict Handling",
+      "evidenceSnippet": "Excerpt derived from {{title}} describing the relevant constraints and decisions."
+    }
+  },
+  "documentDetail": {
+    "loadingTitle": "Loading document...",
+    "loadingSubtitle": "Fetching document metadata from the backend.",
+    "notFoundTitle": "Document not found",
+    "notFoundMessage": "Please return to the document list and try again.",
+    "backToList": "Back to Documents",
+    "versionInfo": "Version {{version}} · Updated {{updatedAt}}",
+    "structureTree": "Structure Tree",
+    "loadingTree": "Loading structure tree...",
+    "searchNode": "Search node",
+    "treeUnavailable": "Structure tree is not available yet.",
+    "nodeDetails": "Node Details",
+    "selectedNode": "Selected Node",
+    "selectNodeHint": "Select a node to view details.",
+    "evidenceList": "Evidence List",
+    "loadingDetail": "Loading document detail...",
+    "score": "Score {{score}}",
+    "rank": "Rank {{rank}}",
+    "conflict": "Conflict",
+    "redundant": "Redundant",
+    "linked": "Linked",
+    "noEvidence": "No evidence linked to this node.",
+    "graphTitle": "Evidence Graph",
+    "graphHint": "Click a node to locate evidence and structure tree highlights.",
+    "errors": {
+      "detail": "Failed to load document detail.",
+      "tree": "Failed to load document tree."
+    }
+  },
+  "graph": {
+    "title": "Evidence Graph",
+    "noDocuments": "No documents available for graph rendering.",
+    "documentLabel": "Document",
+    "searchNodes": "Search Nodes",
+    "searchPlaceholder": "Search graph node",
+    "structureTree": "Structure Tree",
+    "treeUnavailable": "Structure tree is not available yet.",
+    "graphView": "Graph View",
+    "selectedNode": "Selected Node",
+    "linkedEvidence": "Linked evidence: {{count}}",
+    "summaryTitle": "Evidence Summary",
+    "summaryTotalNodes": "Total Nodes",
+    "summaryTreeDepth": "Tree Depth",
+    "summaryEvidenceItems": "Evidence Items",
+    "errors": {
+      "tree": "Failed to load document tree."
+    }
+  },
+  "index": {
+    "overviewTitle": "Index Overview",
+    "versionLine": "Index version {{version}} · {{ready}}/{{total}} documents ready",
+    "statusLine": "Status {{status}} · {{count}} chunks",
+    "notBuilt": "Index not built yet.",
+    "refresh": "Refresh",
+    "build": "Build Index",
+    "building": "Building...",
+    "coverage": "Ready coverage {{percent}}%",
+    "stepsTitle": "Build Steps",
+    "steps": {
+      "collect": "Collecting documents",
+      "chunk": "Chunking and embedding",
+      "merge": "Merging and deduplicating",
+      "publish": "Publishing index snapshot"
+    },
+    "recentRuns": "Recent Runs",
+    "noRuns": "No index builds recorded yet.",
+    "runDuration": "Duration {{duration}}",
+    "runDocs": "Docs {{count}}"
+  },
+  "qa": {
+    "title": "Query Workspace",
+    "placeholder": "Describe the question you want to verify",
+    "topK": "Top K",
+    "rerankK": "Rerank K",
+    "structurePrior": "Structure Prior",
+    "model": "Model",
+    "thinking": "Thinking",
+    "tuning": "Tuning",
+    "run": "Run Query",
+    "running": "Running...",
+    "copyAnswer": "Copy Answer",
+    "exportResult": "Export Result",
+    "stagesTitle": "Retrieval Stages",
+    "stages": {
+      "coarse": "Coarse retrieval",
+      "rerank": "Rerank & score",
+      "fuse": "Fuse evidence",
+      "generate": "Generate answer",
+      "verify": "Verify answer",
+      "done": "Completed"
+    },
+    "answerTitle": "Answer & Citations",
+    "answerLabel": "Answer",
+    "verifyStatus": "Verify Status",
+    "fallbackReason": "Fallback Reason",
+    "graph": "Graph",
+    "graphSummary": "{{nodes}} nodes · {{edges}} edges",
+    "citations": "Citations",
+    "noCitations": "No citations returned.",
+    "coarseSections": "Coarse Sections",
+    "noCoarseSections": "No coarse sections returned.",
+    "noAnswerHint": "Run a query to generate an answer.",
+    "evidenceList": "Evidence List",
+    "evidenceScore": "Score {{score}}",
+    "rank": "Rank {{rank}}",
+    "conflict": "Conflict",
+    "redundant": "Redundant",
+    "select": "Select",
+    "selected": "Selected",
+    "evidenceEmpty": "Evidence will appear after query execution.",
+    "feedbackTitle": "Feedback",
+    "feedbackScore": "Score",
+    "feedbackFlags": "Flags",
+    "feedbackUncertain": "Uncertain",
+    "feedbackConflict": "Conflict",
+    "feedbackPlaceholder": "Add feedback or clarification",
+    "feedbackDisclaimer": "Flags and multi-evidence selection are kept locally; backend stores score and primary node.",
+    "feedbackSubmit": "Submit Feedback",
+    "feedbackHistoryTitle": "Feedback History",
+    "feedbackHistoryEvidence": "Evidence linked: {{count}}",
+    "feedbackHistoryNoComment": "No comment provided.",
+    "feedbackHistoryEmpty": "No feedback submitted yet.",
+    "confirm": {
+      "queryCompletedTitle": "Query Completed",
+      "queryCompletedMessage": "Completed in {{seconds}}s.",
+      "queryFailedTitle": "Query Failed",
+      "copiedTitle": "Copied",
+      "copiedMessage": "Answer copied to clipboard.",
+      "copyFailedTitle": "Copy Failed",
+      "copyFailedMessage": "Clipboard access is unavailable in this environment.",
+      "missingEvidenceTitle": "Missing Evidence Selection",
+      "missingEvidenceMessage": "Select at least one evidence item before submitting feedback.",
+      "feedbackSubmittedTitle": "Feedback Submitted",
+      "feedbackSubmittedMessage": "Thank you for your review. The feedback has been recorded.",
+      "feedbackFailedTitle": "Feedback Failed",
+      "feedbackFailedMessage": "Feedback submission failed."
+    },
+    "errors": {
+      "noAnswer": "No answer returned.",
+      "queryFailed": "Query failed."
+    }
+  },
+  "evaluation": {
+    "title": "Evaluation Tasks",
+    "subtitle": "Single run target under 60 seconds.",
+    "run": "Run Evaluation",
+    "running": "Running...",
+    "exportJson": "Export JSON",
+    "exportCsv": "Export CSV",
+    "metricsTitle": "Metrics",
+    "tasks": {
+      "golden": "Golden Q&A Set",
+      "policy": "Policy Evidence Bench",
+      "conflict": "Conflict Stress"
+    },
+    "metrics": {
+      "recall": "Recall@N",
+      "mrr": "MRR",
+      "ndcg": "NDCG",
+      "coverage": "Citation Coverage",
+      "sampleCount": "Sample Count",
+      "avgLatency": "Avg Latency (ms)",
+      "p95Latency": "P95 Latency (ms)"
+    },
+    "errors": {
+      "failed": "Evaluation failed."
+    }
+  },
+  "system": {
+    "title": "System Health",
+    "subtitle": "Live endpoint checks and readiness summary.",
+    "refresh": "Refresh",
+    "services": {
+      "health": "Health Check",
+      "readiness": "Readiness",
+      "index": "Index Service",
+      "qa": "QA Service"
+    },
+    "queueTitle": "Queue Status",
+    "noService": "No service status available yet.",
+    "noQueue": "No queued tasks available.",
+    "eta": "ETA {{time}}",
+    "versionTitle": "Version Info",
+    "version": {
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "lastDeploy": "Last Deploy"
+    },
+    "tasks": {
+      "failed": "Failed Task",
+      "completed": "Completed Task",
+      "background": "Background Task"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Sensitive keys are not persisted on the client.",
+    "section": {
+      "llm": "LLM Configuration",
+      "weights": "Model Weights",
+      "history": "History Management",
+      "avatars": "Avatars"
+    },
+    "apiKey": "API Key (not stored)",
+    "baseUrl": "Base URL",
+    "modelId": "Model ID",
+    "mode": "Mode",
+    "modeOptions": {
+      "mock": "mock",
+      "disabled": "disabled",
+      "moonshot": "moonshot"
+    },
+    "enableWebSearch": "Web Search",
+    "enableWebSearchHint": "Enable Kimi builtin $web_search (requires moonshot mode and a valid API key).",
+    "enableThinking": "Thinking Output",
+    "enableThinkingHint": "Return reasoning_content for supported models (may increase token usage).",
+    "loadModels": "Load Model List",
+    "loadingModels": "Loading...",
+    "systemPrompt": "System Prompt",
+    "testConnection": "Test Connection",
+    "testing": "Testing...",
+    "saveSettings": "Save Settings",
+    "savingSettings": "Saving...",
+    "weightsSubtitle": "Weights are normalized by the backend.",
+    "retrievalWeights": "Retrieval Weights",
+    "evidenceWeights": "Evidence Weights",
+    "weights": {
+      "sparse": "Sparse",
+      "dense": "Dense",
+      "structure": "Structure",
+      "overlap": "Overlap",
+      "coarse": "Coarse",
+      "match": "Match",
+      "consistency": "Consistency",
+      "diversity": "Diversity",
+      "candidate": "Candidate",
+      "confidence": "Confidence",
+      "redundancy": "Redundancy"
+    },
+    "saveWeights": "Save Weights",
+    "savingWeights": "Saving...",
+    "historyStored": "Stored sessions: {{count}}",
+    "clearHistory": "Clear History",
+    "avatarsUser": "User Avatar",
+    "avatarsAi": "AI Avatar",
+    "avatarUrlPlaceholder": "https://...",
+    "defaultSystemPrompt": "You are a helpful assistant.",
+    "confirm": {
+      "savedTitle": "Settings Saved",
+      "savedMessage": "Non-sensitive settings are stored locally. API keys are kept in memory only.",
+      "saveFailedTitle": "Save Failed",
+      "clearTitle": "Clear History",
+      "clearMessage": "Remove all local chat sessions?",
+      "clearedTitle": "History Cleared",
+      "clearedMessage": "All chat history has been removed.",
+      "connectionTitle": "Connection Test",
+      "connectionFailedTitle": "Connection Test Failed",
+      "weightsSavedTitle": "Weights Saved",
+      "weightsSavedMessage": "Model weights have been updated successfully.",
+      "weightsFailedTitle": "Weights Update Failed"
+    },
+    "errors": {
+      "loadConfig": "Failed to load LLM config.",
+      "saveSettings": "Failed to save settings.",
+      "loadWeights": "Failed to load model weights.",
+      "saveWeights": "Failed to save model weights.",
+      "connectionFailed": "Connection test failed.",
+      "loadModels": "Failed to load model list."
+    },
+    "connection": {
+      "success": "Connection check passed. Latency {{latency}}ms.",
+      "status": "Connection status: {{status}}"
+    }
+  },
+  "modelConfig": {
+    "title": "Configuration",
+    "modelSection": "Model Configuration",
+    "enableTuning": "Enable Tuning",
+    "tuningHint": "Allow editing of reasoning weights",
+    "enableThinking": "Enable Thinking",
+    "thinkingHint": "Show model thought traces when supported",
+    "thinkingUnsupported": "This model does not support thinking traces.",
+    "done": "Done"
+  },
+  "detailPanel": {
+    "empty": "Select a node in the graph to view details",
+    "preview": "Preview Section",
+    "jump": "Jump to Node",
+    "reason": "Association Reason",
+    "location": "Location",
+    "view": "(View)",
+    "nodeInfo": "Node Information",
+    "relevance": "Relevance Score",
+    "tuningEnabled": "Tuning Enabled",
+    "tuningHint": "Enable Tuning in configuration to adjust this weight."
+  },
+  "evidenceModal": {
+    "title": "Evidence Graph",
+    "subtitle": "Analysis for Message ID: {{id}}",
+    "saveFavorite": "Save to Favorites",
+    "previewTitle": "Preview Section",
+    "previewMessage": "Previewing content from page {{page}} of {{file}}.",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "resetView": "Reset View"
+  },
+  "confirm": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "thoughtChains": {
+    "title": "Thought Chain Manager",
+    "subtitle": "Manage response, conversation, profile, and longform chains with evidence-driven reasoning.",
+    "stats": {
+      "favorites": "Favorites {{count}}",
+      "available": "Available {{count}}",
+      "coverage": "Avg coverage {{percent}}%"
+    },
+    "searchPlaceholder": "Search chains, questions, or summaries",
+    "filterAll": "All Types",
+    "onlyFavorites": "Only favorites",
+    "hint": "Each key node is bound to document evidence with structure-aware retrieval and adaptive fusion.",
+    "evidenceMissing": "Evidence Missing",
+    "evidenceMissingHint": "No document evidence detected. Please import and index documents first.",
+    "listTitle": "Chain List",
+    "detailTitle": "Chain Detail",
+    "favorite": {
+      "add": "Favorite",
+      "added": "Favorited",
+      "addTo": "Add to Favorites",
+      "remove": "Remove Favorite"
+    },
+    "badges": {
+      "nodes": "Nodes {{count}}",
+      "evidence": "Evidence {{count}}",
+      "coverage": "Coverage {{percent}}%"
+    },
+    "questionLabel": "Question",
+    "answerLabel": "Answer Summary",
+    "structureTitle": "Structure Tree",
+    "evidenceDetailTitle": "Evidence Details",
+    "selectedNode": "Node {{name}}",
+    "selectedNodeFallback": "Not Selected",
+    "score": "Score {{score}}",
+    "chunk": "Chunk {{id}}",
+    "rank": "Rank {{rank}}",
+    "conflict": "Conflict",
+    "redundant": "Redundant",
+    "nodeNoEvidence": "No evidence bound to the current node.",
+    "strategyTitle": "Structure-aware Retrieval & Evidence Fusion Strategy",
+    "strategy": {
+      "depth": "Structure Depth",
+      "topK": "Top K",
+      "fusion": "Fusion Strategy",
+      "fusionLabel": "Adaptive evidence fusion",
+      "coverage": "Evidence Coverage",
+      "conflictRate": "Conflict Rate",
+      "redundantRate": "Redundancy Rate",
+      "stages": {
+        "locate": "Hierarchy positioning",
+        "retrieve": "Structure-aware retrieval",
+        "fuse": "Evidence fusion",
+        "validate": "Conflict validation",
+        "summarize": "Answer summary"
+      }
+    },
+    "emptySelection": "Select a chain to view details and evidence.",
+    "emptyList": "No chains match the current filters.",
+    "types": {
+      "response": {
+        "label": "Response Chain",
+        "description": "Reasoning chain and evidence for a single response"
+      },
+      "conversation": {
+        "label": "Conversation Chain",
+        "description": "Hierarchical structure for multi-turn conversations"
+      },
+      "profile": {
+        "label": "Profile Chain",
+        "description": "Aggregated reasoning across archived sessions"
+      },
+      "longform": {
+        "label": "Longform Chain",
+        "description": "Structure for longform document QA"
+      }
+    },
+    "context": {
+      "response": "single response",
+      "conversation": "multi-turn conversation",
+      "profile": "profile aggregation",
+      "longform": "longform document"
+    },
+    "tree": {
+      "root": {
+        "title": "Core problem definition",
+        "claim": "Define the {{context}} problem scope and objectives."
+      },
+      "structure": {
+        "title": "Structured decomposition",
+        "claim": "Decompose {{context}} into a structured hierarchy and key nodes."
+      },
+      "mapping": {
+        "title": "Concept mapping",
+        "claim": "Map core concepts to document nodes."
+      },
+      "retrieval": {
+        "title": "Retrieval clues",
+        "claim": "Extract retrieval signals and pinpoint related sections."
+      },
+      "fusion": {
+        "title": "Evidence fusion",
+        "claim": "Validate consistency and merge conflicts for {{context}} evidence."
+      },
+      "consistency": {
+        "title": "Consistency check",
+        "claim": "Merge high-consistency evidence and stabilize conclusions."
+      },
+      "conflict": {
+        "title": "Conflict resolution",
+        "claim": "Flag conflicting evidence and keep explainable paths."
+      },
+      "conclusion": {
+        "title": "Conclusion synthesis",
+        "claim": "Synthesize {{context}} conclusions with risk statements."
+      },
+      "summary": {
+        "title": "Verifiable summary",
+        "claim": "Output verifiable conclusions and reasoning paths."
+      },
+      "boundary": {
+        "title": "Boundaries & counterexamples",
+        "claim": "Mark scope boundaries and potential counterexamples."
+      }
+    },
+    "chain": {
+      "responseTitle": "Response Chain · {{title}}",
+      "responseSource": "Session {{title}}",
+      "responseQuestionFallback": "Untitled question",
+      "responseAnswerFallback": "Answer not generated yet.",
+      "responseSummaryWithThought": "Includes {{count}} thought steps with evidence.",
+      "responseSummaryDefault": "Build reasoning and evidence attribution from the response.",
+      "responseSampleTitle": "Response Chain · Sample",
+      "responseSampleSource": "Default Session",
+      "responseSampleQuestion": "No conversation yet.",
+      "responseSampleAnswer": "Waiting for an answer.",
+      "responseSampleSummary": "Sample response chain for structured evidence.",
+      "conversationTitle": "Conversation Chain · {{title}}",
+      "conversationSource": "Session {{title}}",
+      "conversationQuestion": "Aggregate {{count}} turns into core questions and structure.",
+      "conversationAnswer": "Summarize the conversation with evidence chains.",
+      "conversationSummary": "Covers {{count}} responses.",
+      "conversationSampleTitle": "Conversation Chain · Sample",
+      "conversationSampleSource": "Default Session",
+      "conversationSampleQuestion": "No conversation history.",
+      "conversationSampleAnswer": "Waiting for multi-turn aggregation.",
+      "conversationSampleSummary": "Conversation chains capture multi-turn evidence.",
+      "profileTitle": "Profile Chain · All Sessions",
+      "profileSource": "Archived {{count}} sessions",
+      "profileQuestion": "Aggregate {{count}} turns into a profile-level view.",
+      "profileAnswer": "Provide cross-session evidence fusion and risk boundaries.",
+      "profileSummary": "Profile chains unify evidence across sessions.",
+      "longformTitle": "Longform Chain · {{title}}",
+      "longformSource": "Document {{title}}",
+      "longformSourceFallback": "No document loaded",
+      "longformQuestion": "Build explainable hierarchical retrieval for longform QA.",
+      "longformAnswer": "Apply structure-aware retrieval and adaptive fusion for conclusions.",
+      "longformSummary": "Emphasizes chapter alignment, evidence linking, and conflict checks."
+    }
+  }
+}

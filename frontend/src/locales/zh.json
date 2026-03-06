@@ -1,0 +1,653 @@
+﻿{
+  "app": {
+    "title": "NewRAG 系统",
+    "loading": "加载中..."
+  },
+  "nav": {
+    "home": "首页",
+    "chat": "聊天",
+    "qa": "问答工作台",
+    "docs": "文档管理",
+    "index": "索引管理",
+    "graph": "证据图谱",
+    "chains": "思维链管理",
+    "eval": "评测",
+    "status": "系统状态",
+    "settings": "系统设置"
+  },
+  "theme": {
+    "toggle": "切换主题"
+  },
+  "lang": {
+    "toggle": "切换语言"
+  },
+  "common": {
+    "back": "返回",
+    "ok": "确定",
+    "none": "无",
+    "empty": "—",
+    "unknown": "未知",
+    "unknownDocument": "未知文档",
+    "page": "第 {{page}} 页",
+    "enabled": "启用",
+    "disabled": "禁用",
+    "requestFailed": "请求失败。"
+  },
+  "status": {
+    "pending": "待处理",
+    "active": "进行中",
+    "done": "完成",
+    "idle": "空闲",
+    "running": "运行中",
+    "queued": "排队中",
+    "success": "成功",
+    "warning": "警告",
+    "healthy": "健康",
+    "degraded": "降级",
+    "down": "不可用"
+  },
+  "sidebar": {
+    "recent": "最近",
+    "empty": "暂无最近对话",
+    "archive": "归档",
+    "archiveFolder": "档案夹",
+    "archiveSearch": "检索归档对话",
+    "archiveEmpty": "暂无归档对话",
+    "archiveEmptySearch": "未匹配到归档对话",
+    "delete": "删除",
+    "restore": "恢复",
+    "collapseRecent": "收起最近对话",
+    "expandRecent": "展开最近对话",
+    "collapseArchive": "收起档案夹",
+    "expandArchive": "展开档案夹",
+    "confirm": {
+      "archiveTitle": "归档会话",
+      "archiveMessage": "确认将该会话归档？归档后将从最近列表隐藏。",
+      "deleteTitle": "删除会话",
+      "deleteMessage": "确认删除该会话？该操作不可撤销。"
+    }
+  },
+  "topbar": {
+    "subtitle": "工作区状态概览与导航上下文。",
+    "indexReady": "索引就绪",
+    "indexBuilding": "索引构建中",
+    "cacheFresh": "新鲜",
+    "cacheStale": "陈旧",
+    "cache": "缓存{{state}} · {{minutes}}分钟",
+    "docsReady": "文档就绪 {{ready}}/{{total}}"
+  },
+  "chat": {
+    "new": "新对话",
+    "placeholder": "请输入问题...",
+    "emptyTitle": "今天我能帮你什么？",
+    "assistantLabel": "助手",
+    "userAlt": "用户",
+    "aiAlt": "AI",
+    "evidenceGraph": "证据图谱",
+    "viewEvidenceGraph": "查看证据图谱",
+    "viewConversationGraph": "查看对话图谱",
+    "thought": {
+      "show": "显示思考过程",
+      "hide": "隐藏思考过程",
+      "thinking": "思考中",
+      "done": "思考"
+    },
+    "listening": "正在聆听...",
+    "uploadFile": "上传文件",
+    "voiceInput": "语音输入",
+    "modelLabel": "模型：",
+    "thinkingToggle": "思考",
+    "tuningToggle": "调参",
+    "error": {
+      "noQuestion": "请先输入问题再发送附件。",
+      "noAnswer": "未返回答案。",
+      "queryFailed": "查询失败。"
+    },
+    "reason": {
+      "retrievedEvidence": "检索到的证据节点"
+    },
+    "thoughtSteps": {
+      "parse": "解析请求并提取意图",
+      "reviewAttachments": "审阅 {{count}} 个附件",
+      "checkContext": "检查相关上下文",
+      "draft": "撰写回复",
+      "summarize": "对长文本进行摘要以便理解"
+    }
+  },
+  "documents": {
+    "title": "文档管理",
+    "cacheFresh": "新鲜",
+    "cacheStale": "陈旧",
+    "cache": "缓存{{state}} · {{minutes}}分钟",
+    "drop": "拖拽文件到此上传",
+    "supports": "支持 PDF、DOCX、MD、TXT",
+    "selectFiles": "选择文件",
+    "searchPlaceholder": "搜索文档",
+    "statusAll": "全部状态",
+    "sectionTitle": "文档列表",
+    "pages": "{{count}} 页",
+    "restore": "恢复",
+    "archive": "归档",
+    "archiveEdit": "修改归档目录",
+    "archivePathLabel": "归档目录（可选）",
+    "archivePathPlaceholder": "例如：项目/阶段A",
+    "archivePathHint": "支持使用 / 作为子目录分隔。",
+    "archivePathDisplay": "归档目录：{{path}}",
+    "archiveEditTitle": "修改归档目录",
+    "archiveEditMessage": "可更新已归档文档的归档目录。",
+    "archiveEditConfirm": "更新目录",
+    "delete": "删除",
+    "empty": "当前筛选条件下没有文档。",
+    "untitled": "未命名文档",
+    "confirm": {
+      "deleteTitle": "删除文档",
+      "deleteMessage": "这将从工作区移除文档元数据。",
+      "archiveTitle": "归档文档",
+      "archiveMessage": "归档文档将从索引中排除。",
+      "restoreTitle": "恢复文档",
+      "restoreMessage": "恢复后文档将重新参与索引。"
+    },
+    "status": {
+      "raw": "原始",
+      "parsed": "已解析",
+      "chunked": "已分块",
+      "embedded": "已向量化",
+      "indexed": "已索引",
+      "ready": "就绪",
+      "error": "错误",
+      "archived": "已归档"
+    },
+    "seed": {
+      "overviewTitle": "{{name}} 概览",
+      "overviewPath": "{{name}} / 概览",
+      "scopeTitle": "范围与目标",
+      "scopePath": "{{name}} / 1 范围与目标",
+      "scopeReqTitle": "关键需求",
+      "scopeReqPath": "{{name}} / 1.1 关键需求",
+      "scopeRiskTitle": "风险提示",
+      "scopeRiskPath": "{{name}} / 1.2 风险提示",
+      "pipelineTitle": "流程链路",
+      "pipelinePath": "{{name}} / 2 流程链路",
+      "pipelineStageTitle": "阶段映射",
+      "pipelineStagePath": "{{name}} / 2.1 阶段映射",
+      "pipelineCacheTitle": "缓存策略",
+      "pipelineCachePath": "{{name}} / 2.2 缓存策略",
+      "evidenceTitle": "证据规范",
+      "evidencePath": "{{name}} / 3 证据规范",
+      "evidenceScoreTitle": "评分规则",
+      "evidenceScorePath": "{{name}} / 3.1 评分规则",
+      "evidenceConflictTitle": "冲突处理",
+      "evidenceConflictPath": "{{name}} / 3.2 冲突处理",
+      "evidenceSnippet": "摘录自 {{title}} 的片段，用于说明相关约束与决策。"
+    }
+  },
+  "documentDetail": {
+    "loadingTitle": "正在加载文档...",
+    "loadingSubtitle": "正在从后端获取文档元数据。",
+    "notFoundTitle": "未找到文档",
+    "notFoundMessage": "请返回文档列表后重试。",
+    "backToList": "返回文档列表",
+    "versionInfo": "版本 {{version}} · 更新于 {{updatedAt}}",
+    "structureTree": "结构树",
+    "loadingTree": "正在加载结构树...",
+    "searchNode": "搜索节点",
+    "treeUnavailable": "结构树暂不可用。",
+    "nodeDetails": "节点详情",
+    "selectedNode": "已选节点",
+    "selectNodeHint": "请选择节点查看详情。",
+    "evidenceList": "证据列表",
+    "loadingDetail": "正在加载文档详情...",
+    "score": "评分 {{score}}",
+    "rank": "排名 {{rank}}",
+    "conflict": "冲突",
+    "redundant": "冗余",
+    "linked": "已关联",
+    "noEvidence": "该节点暂无关联证据。",
+    "graphTitle": "证据图谱",
+    "graphHint": "点击节点以定位证据并高亮结构树。",
+    "errors": {
+      "detail": "加载文档详情失败。",
+      "tree": "加载文档结构失败。"
+    }
+  },
+  "graph": {
+    "title": "证据图谱",
+    "noDocuments": "暂无可用于渲染图谱的文档。",
+    "documentLabel": "文档",
+    "searchNodes": "搜索节点",
+    "searchPlaceholder": "搜索图谱节点",
+    "structureTree": "结构树",
+    "treeUnavailable": "结构树暂不可用。",
+    "graphView": "图谱视图",
+    "selectedNode": "已选节点",
+    "linkedEvidence": "关联证据：{{count}}",
+    "summaryTitle": "证据概览",
+    "summaryTotalNodes": "节点总数",
+    "summaryTreeDepth": "树深度",
+    "summaryEvidenceItems": "证据条目",
+    "errors": {
+      "tree": "加载文档结构失败。"
+    }
+  },
+  "index": {
+    "overviewTitle": "索引概览",
+    "versionLine": "索引版本 {{version}} · {{ready}}/{{total}} 文档就绪",
+    "statusLine": "状态 {{status}} · {{count}} 分片",
+    "notBuilt": "索引尚未构建。",
+    "refresh": "刷新",
+    "build": "构建索引",
+    "building": "构建中...",
+    "coverage": "就绪覆盖率 {{percent}}%",
+    "stepsTitle": "构建步骤",
+    "steps": {
+      "collect": "收集文档",
+      "chunk": "分块与向量化",
+      "merge": "合并与去重",
+      "publish": "发布索引快照"
+    },
+    "recentRuns": "最近构建",
+    "noRuns": "暂无构建记录。",
+    "runDuration": "耗时 {{duration}}",
+    "runDocs": "文档 {{count}}"
+  },
+  "qa": {
+    "title": "查询工作台",
+    "placeholder": "描述需要验证的问题",
+    "topK": "Top K",
+    "rerankK": "Rerank K",
+    "structurePrior": "结构先验",
+    "model": "模型",
+    "thinking": "思考",
+    "tuning": "调参",
+    "run": "运行查询",
+    "running": "运行中...",
+    "copyAnswer": "复制答案",
+    "exportResult": "导出结果",
+    "stagesTitle": "检索阶段",
+    "stages": {
+      "coarse": "粗检索",
+      "rerank": "重排与评分",
+      "fuse": "证据融合",
+      "generate": "生成答案",
+      "verify": "校验答案",
+      "done": "完成"
+    },
+    "answerTitle": "答案与引用",
+    "answerLabel": "答案",
+    "verifyStatus": "校验状态",
+    "fallbackReason": "降级原因",
+    "graph": "图谱",
+    "graphSummary": "{{nodes}} 个节点 · {{edges}} 条边",
+    "citations": "引用",
+    "noCitations": "未返回引用。",
+    "coarseSections": "粗粒度章节",
+    "noCoarseSections": "未返回粗粒度章节。",
+    "noAnswerHint": "运行查询以生成答案。",
+    "evidenceList": "证据列表",
+    "evidenceScore": "评分 {{score}}",
+    "rank": "排名 {{rank}}",
+    "conflict": "冲突",
+    "redundant": "冗余",
+    "select": "选择",
+    "selected": "已选择",
+    "evidenceEmpty": "执行查询后显示证据。",
+    "feedbackTitle": "反馈",
+    "feedbackScore": "评分",
+    "feedbackFlags": "标记",
+    "feedbackUncertain": "不确定",
+    "feedbackConflict": "冲突",
+    "feedbackPlaceholder": "补充反馈或说明",
+    "feedbackDisclaimer": "标记与多证据选择仅保存在本地；后端仅存评分与主节点。",
+    "feedbackSubmit": "提交反馈",
+    "feedbackHistoryTitle": "反馈历史",
+    "feedbackHistoryEvidence": "关联证据：{{count}}",
+    "feedbackHistoryNoComment": "未提供评论。",
+    "feedbackHistoryEmpty": "暂无反馈记录。",
+    "confirm": {
+      "queryCompletedTitle": "查询完成",
+      "queryCompletedMessage": "完成耗时 {{seconds}} 秒。",
+      "queryFailedTitle": "查询失败",
+      "copiedTitle": "已复制",
+      "copiedMessage": "答案已复制到剪贴板。",
+      "copyFailedTitle": "复制失败",
+      "copyFailedMessage": "当前环境无法访问剪贴板。",
+      "missingEvidenceTitle": "缺少证据选择",
+      "missingEvidenceMessage": "请先选择至少一条证据再提交反馈。",
+      "feedbackSubmittedTitle": "反馈已提交",
+      "feedbackSubmittedMessage": "感谢反馈，已记录。",
+      "feedbackFailedTitle": "反馈失败",
+      "feedbackFailedMessage": "提交反馈失败。"
+    },
+    "errors": {
+      "noAnswer": "未返回答案。",
+      "queryFailed": "查询失败。"
+    }
+  },
+  "evaluation": {
+    "title": "评测任务",
+    "subtitle": "单次运行目标小于 60 秒。",
+    "run": "运行评测",
+    "running": "运行中...",
+    "exportJson": "导出 JSON",
+    "exportCsv": "导出 CSV",
+    "metricsTitle": "指标",
+    "tasks": {
+      "golden": "黄金问答集",
+      "policy": "政策证据基准",
+      "conflict": "冲突压力测试"
+    },
+    "metrics": {
+      "recall": "Recall@N",
+      "mrr": "MRR",
+      "ndcg": "NDCG",
+      "coverage": "引用覆盖率",
+      "sampleCount": "样本数",
+      "avgLatency": "平均延迟 (ms)",
+      "p95Latency": "P95 延迟 (ms)"
+    },
+    "errors": {
+      "failed": "评测失败。"
+    }
+  },
+  "system": {
+    "title": "系统健康",
+    "subtitle": "实时检查端点状态与就绪情况。",
+    "refresh": "刷新",
+    "services": {
+      "health": "健康检查",
+      "readiness": "就绪检查",
+      "index": "索引服务",
+      "qa": "问答服务"
+    },
+    "queueTitle": "队列状态",
+    "noService": "暂无服务状态信息。",
+    "noQueue": "暂无排队任务。",
+    "eta": "预计 {{time}}",
+    "versionTitle": "版本信息",
+    "version": {
+      "frontend": "前端",
+      "backend": "后端",
+      "lastDeploy": "最近部署"
+    },
+    "tasks": {
+      "failed": "失败任务",
+      "completed": "已完成任务",
+      "background": "后台任务"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "subtitle": "敏感密钥不会保存在客户端。",
+    "section": {
+      "llm": "LLM 配置",
+      "weights": "模型权重",
+      "history": "历史管理",
+      "avatars": "头像设置"
+    },
+    "apiKey": "API Key（不保存）",
+    "baseUrl": "Base URL",
+    "modelId": "模型 ID",
+    "mode": "模式",
+    "modeOptions": {
+      "mock": "模拟",
+      "disabled": "禁用",
+      "moonshot": "Moonshot / Kimi"
+    },
+    "enableWebSearch": "联网搜索",
+    "enableWebSearchHint": "启用 Kimi 内置 $web_search（需要 moonshot 模式与可用的 API Key）。",
+    "enableThinking": "输出思考内容",
+    "enableThinkingHint": "在支持的模型上返回 reasoning_content（可能会增加 token 消耗）。",
+    "loadModels": "加载模型列表",
+    "loadingModels": "加载中...",
+    "systemPrompt": "系统提示词",
+    "testConnection": "测试连接",
+    "testing": "测试中...",
+    "saveSettings": "保存设置",
+    "savingSettings": "保存中...",
+    "weightsSubtitle": "权重由后端归一化。",
+    "retrievalWeights": "检索权重",
+    "evidenceWeights": "证据权重",
+    "weights": {
+      "sparse": "稀疏",
+      "dense": "稠密",
+      "structure": "结构",
+      "overlap": "重叠",
+      "coarse": "粗粒度",
+      "match": "匹配",
+      "consistency": "一致性",
+      "diversity": "多样性",
+      "candidate": "候选",
+      "confidence": "置信度",
+      "redundancy": "冗余"
+    },
+    "saveWeights": "保存权重",
+    "savingWeights": "保存中...",
+    "historyStored": "已保存会话：{{count}}",
+    "clearHistory": "清空历史",
+    "avatarsUser": "用户头像",
+    "avatarsAi": "AI 头像",
+    "avatarUrlPlaceholder": "https://...",
+    "defaultSystemPrompt": "你是一个乐于助人的助手。",
+    "confirm": {
+      "savedTitle": "设置已保存",
+      "savedMessage": "非敏感设置已保存在本地，API Key 仅保存在内存中。",
+      "saveFailedTitle": "保存失败",
+      "clearTitle": "清空历史",
+      "clearMessage": "确定移除所有本地聊天会话？",
+      "clearedTitle": "历史已清空",
+      "clearedMessage": "所有聊天记录已删除。",
+      "connectionTitle": "连接测试",
+      "connectionFailedTitle": "连接测试失败",
+      "weightsSavedTitle": "权重已保存",
+      "weightsSavedMessage": "模型权重已更新成功。",
+      "weightsFailedTitle": "权重更新失败"
+    },
+    "errors": {
+      "loadConfig": "加载 LLM 配置失败。",
+      "saveSettings": "保存设置失败。",
+      "loadWeights": "加载模型权重失败。",
+      "saveWeights": "保存模型权重失败。",
+      "connectionFailed": "连接测试失败。",
+      "loadModels": "加载模型列表失败。"
+    },
+    "connection": {
+      "success": "连接检测通过，延迟 {{latency}}ms。",
+      "status": "连接状态：{{status}}"
+    }
+  },
+  "modelConfig": {
+    "title": "配置",
+    "modelSection": "模型配置",
+    "enableTuning": "启用调参",
+    "tuningHint": "允许编辑推理权重",
+    "enableThinking": "启用思考",
+    "thinkingHint": "支持时显示模型思考轨迹",
+    "thinkingUnsupported": "该模型不支持思考轨迹。",
+    "done": "完成"
+  },
+  "detailPanel": {
+    "empty": "请在图谱中选择节点查看详情",
+    "preview": "预览片段",
+    "jump": "跳转到节点",
+    "reason": "关联原因",
+    "location": "位置",
+    "view": "（查看）",
+    "nodeInfo": "节点信息",
+    "relevance": "相关度评分",
+    "tuningEnabled": "已启用调参",
+    "tuningHint": "在配置中启用调参以调整该权重。"
+  },
+  "evidenceModal": {
+    "title": "证据图谱",
+    "subtitle": "消息 ID 分析：{{id}}",
+    "saveFavorite": "保存到收藏",
+    "previewTitle": "预览片段",
+    "previewMessage": "正在预览第 {{page}} 页的 {{file}} 内容。",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "resetView": "重置视图"
+  },
+  "confirm": {
+    "confirm": "确认",
+    "cancel": "取消"
+  },
+  "thoughtChains": {
+    "title": "思维链收藏管理",
+    "subtitle": "覆盖回答链、对话链、档案链与长文档链，统一管理证据驱动的推理结构。",
+    "stats": {
+      "favorites": "收藏 {{count}}",
+      "available": "可用链 {{count}}",
+      "coverage": "平均覆盖 {{percent}}%"
+    },
+    "searchPlaceholder": "搜索链表、问题或摘要",
+    "filterAll": "全部类型",
+    "onlyFavorites": "仅看收藏",
+    "hint": "每个关键节点均绑定文档证据，支持结构感知检索与自适应证据融合策略。",
+    "evidenceMissing": "证据缺失",
+    "evidenceMissingHint": "尚未检测到可用文档证据，请先导入并索引文档。",
+    "listTitle": "链表列表",
+    "detailTitle": "链表详情",
+    "favorite": {
+      "add": "收藏",
+      "added": "已收藏",
+      "addTo": "加入收藏",
+      "remove": "取消收藏"
+    },
+    "badges": {
+      "nodes": "节点 {{count}}",
+      "evidence": "证据 {{count}}",
+      "coverage": "覆盖 {{percent}}%"
+    },
+    "questionLabel": "问题",
+    "answerLabel": "答案汇总",
+    "structureTitle": "结构树",
+    "evidenceDetailTitle": "证据明细",
+    "selectedNode": "节点 {{name}}",
+    "selectedNodeFallback": "未选择",
+    "score": "评分 {{score}}",
+    "chunk": "片段 {{id}}",
+    "rank": "排名 {{rank}}",
+    "conflict": "冲突",
+    "redundant": "冗余",
+    "nodeNoEvidence": "当前节点尚未绑定证据。",
+    "strategyTitle": "结构感知检索与证据融合策略",
+    "strategy": {
+      "depth": "结构深度",
+      "topK": "Top K",
+      "fusion": "融合策略",
+      "fusionLabel": "自适应证据融合",
+      "coverage": "证据覆盖",
+      "conflictRate": "冲突率",
+      "redundantRate": "冗余率",
+      "stages": {
+        "locate": "层次节点定位",
+        "retrieve": "结构感知检索",
+        "fuse": "证据融合",
+        "validate": "冲突校验",
+        "summarize": "答案汇总"
+      }
+    },
+    "emptySelection": "请选择一个链表查看详细结构与证据。",
+    "emptyList": "当前筛选条件下没有链表。",
+    "types": {
+      "response": {
+        "label": "回答链",
+        "description": "单次回答的推理链与证据"
+      },
+      "conversation": {
+        "label": "对话链",
+        "description": "多轮对话的层次化结构"
+      },
+      "profile": {
+        "label": "档案链",
+        "description": "归档会话的全量推理链"
+      },
+      "longform": {
+        "label": "长文档链",
+        "description": "面向长文档问答的结构检索"
+      }
+    },
+    "context": {
+      "response": "单次回答",
+      "conversation": "多轮对话",
+      "profile": "档案聚合",
+      "longform": "长文档"
+    },
+    "tree": {
+      "root": {
+        "title": "核心问题界定",
+        "claim": "针对{{context}}进行问题界定，明确目标与边界。"
+      },
+      "structure": {
+        "title": "结构化拆解",
+        "claim": "将{{context}}拆成可检索的层级结构与关键节点。"
+      },
+      "mapping": {
+        "title": "概念映射",
+        "claim": "建立核心概念到文档节点的映射关系。"
+      },
+      "retrieval": {
+        "title": "检索线索",
+        "claim": "提取检索线索并锁定相关章节。"
+      },
+      "fusion": {
+        "title": "证据融合",
+        "claim": "对{{context}}相关证据进行一致性核验与冲突归并。"
+      },
+      "consistency": {
+        "title": "一致性核查",
+        "claim": "合并高一致证据，稳定结论。"
+      },
+      "conflict": {
+        "title": "冲突消解",
+        "claim": "标记冲突证据并保留可解释路径。"
+      },
+      "conclusion": {
+        "title": "结论归纳",
+        "claim": "基于证据链汇总{{context}}结论与风险声明。"
+      },
+      "summary": {
+        "title": "可验证结论",
+        "claim": "输出可验证的结论摘要与论证路径。"
+      },
+      "boundary": {
+        "title": "边界与反例",
+        "claim": "标注适用范围与潜在反例。"
+      }
+    },
+    "chain": {
+      "responseTitle": "回答链 · {{title}}",
+      "responseSource": "会话 {{title}}",
+      "responseQuestionFallback": "未命名问题",
+      "responseAnswerFallback": "尚未生成回答。",
+      "responseSummaryWithThought": "包含 {{count}} 个思维步骤并已绑定证据。",
+      "responseSummaryDefault": "基于回答内容构建推理链与证据归因。",
+      "responseSampleTitle": "回答链 · 默认样例",
+      "responseSampleSource": "默认会话",
+      "responseSampleQuestion": "尚未开始对话，暂无问题。",
+      "responseSampleAnswer": "等待生成回答。",
+      "responseSampleSummary": "默认回答链用于展示结构化证据组织。",
+      "conversationTitle": "对话链 · {{title}}",
+      "conversationSource": "会话 {{title}}",
+      "conversationQuestion": "聚合 {{count}} 轮对话的主问题与结构。",
+      "conversationAnswer": "基于多轮证据链给出整段对话的结论汇总。",
+      "conversationSummary": "覆盖 {{count}} 次回答。",
+      "conversationSampleTitle": "对话链 · 默认样例",
+      "conversationSampleSource": "默认会话",
+      "conversationSampleQuestion": "暂无对话记录。",
+      "conversationSampleAnswer": "等待多轮对话形成聚合结论。",
+      "conversationSampleSummary": "对话链用于覆盖多轮问答的结构化证据。",
+      "profileTitle": "档案链 · 全量会话",
+      "profileSource": "归档 {{count}} 组会话",
+      "profileQuestion": "整合 {{count}} 轮对话形成档案级问题视图。",
+      "profileAnswer": "输出跨会话的证据融合结论与风险边界。",
+      "profileSummary": "档案链覆盖全量会话并形成统一证据网络。",
+      "longformTitle": "长文档链 · {{title}}",
+      "longformSource": "文档 {{title}}",
+      "longformSourceFallback": "未加载文档",
+      "longformQuestion": "面向长文档问答，构建可解释的层级检索链。",
+      "longformAnswer": "通过结构感知检索与自适应证据融合形成长文档结论。",
+      "longformSummary": "长文档链强调章节对齐、证据串联与冲突校验。"
+    }
+  }
+}

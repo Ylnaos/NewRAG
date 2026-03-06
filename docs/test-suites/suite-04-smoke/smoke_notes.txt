@@ -1,0 +1,13 @@
+NewRAG Test Suite 04 - Smoke
+
+ID: SUITE04-SMOKE
+Purpose: quick end-to-end acceptance check for upload -> index -> QA -> graph.
+
+FACTS
+1) Launch code: ORANGE-UNICORN-42
+2) Project codename: Sparrow-E2E-20260305
+3) Incident SLA: acknowledge SEV-1 within 15 minutes
+
+UNIQUE MARKERS
+- SMOKE-UNIQUE-PHRASE: sunrise-echo-anchor
+- SMOKE-UUID: 20260305-aaaa-bbbb-cccc-smoke0001

@@ -1,0 +1,4 @@
+suite,query,expected_behavior,notes
+suite-02,"What is the measurement range of ACME Thermometer T-100?","Evidence list should include BOTH '0 to 100' and '0 to 120' and at least one item should have conflict_flag=true.","Conflict detection is number-based + token overlap."
+suite-02,"What is the warranty period for ACME Thermometer T-100?","Evidence may include duplicate warranty statements; at least one item may have redundant_flag=true.","Redundancy detection uses token Jaccard >= 0.8."
+suite-02,"What is the sampling rate of ACME Thermometer T-100?","Answer should mention 5 Hz.","Both docs agree on sampling rate."
